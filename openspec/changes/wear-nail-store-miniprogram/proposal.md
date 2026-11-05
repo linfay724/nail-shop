@@ -6,8 +6,11 @@
 
 本变更只规划小程序端（页面、交互、数据层与接口契约），服务端另行立项；因此所有接口按契约先行、由本地 mock 层实现，后续替换真实服务端时页面逻辑不变。
 
+但仓库目前仍是 `uni-preset-vue` 生成的 JS 空壳：没有 TypeScript、状态管理、UI 组件库，`vite.config.js` 只有默认配置，`package.json` 还挂着 10 余个用不到的平台包。直接在其上写 20 多个页面，类型错误只能在运行时暴露，跨页状态与视觉规范也会各自为政。因此本变更把「工程基线升级」与「业务实现」合并为一次交付：先锁定 TypeScript + Pinia + uView Pro 基线，再在其上写业务。
+
 ## What Changes
 
+- 工程基线升级：`vite.config.js` → `vite.config.ts`（`@` 别名、按 mode 加载环境变量），`src/main.js` → `src/main.ts`，全量 TypeScript strict 且 `type-check` 为门槛；引入 Pinia 2.1.7 与统一持久化插件、uView Pro 0.6.23（easycom + 主题覆盖）；`package.json` 只保留 H5 与微信小程序脚本并移除多余平台包。
 - 搭建小程序骨架：`pages.json` 配置 5 个 tabBar 页面（首页 / 商品 / 购物车 / 订单 / 我的）与主包页面、`pages-admin` 管理端分包（不进 tabBar）。
 - 用户端页面：首页（轮播 + 推荐位 + 风格/甲型分类入口）、商品列表（分类筛选、封面/名称/售价/销量）、商品详情（多图、规格选择、加购/立即购买、收藏）、购物车（多规格行、数量增减、选中结算）、结算下单（地址、备注、支付）、订单列表与详情（状态流转、物流、确认收货、申请售后）、个人中心（微信授权登录、订单/收藏/地址入口、客服）、地址管理与编辑、尺码测量指引页。
 - 管理端分包页面：隐藏入口 + 管理员鉴权页、商品管理列表与编辑（基础展示信息、规格库存、上下架）、制作档案编辑（材料清单行、分步图文步骤、排序、成本核算）、订单管理（筛选、详情、填单号发货、售后处理）。
@@ -31,7 +34,8 @@
 
 ## Impact
 
-- 配置：`src/pages.json`（tabBar、主包/分包路由）、`src/manifest.json`（小程序 appid 与应用信息）、`src/uni.scss`（设计变量）。
-- 新增代码：`src/pages/**`（用户端页面）、`src/pages-admin/**`（管理端分包）、`src/api/**`（接口契约与请求封装）、`src/mock/**`（mock 数据与适配层）、`src/store/**`（登录态、购物车、管理员态）、`src/components/**`（商品卡、规格选择弹层、空态等）、`src/utils/**`（价格、路由守卫、存储）。
-- 依赖：沿用现有 uni-app + Vue3 技术栈，不引入 UI 组件库（自绘样式与 `uni.scss` 变量）；不新增运行时依赖。
+- 配置：`vite.config.ts`、`tsconfig.json`、`tsconfig.node.json`、`.env.development`、`.env.production`、`src/pages.json`（easycom、tabBar、主包/分包路由）、`src/manifest.json`（小程序 appid 与应用信息）、`src/uni.scss`（设计 token 与 uView Pro 主题覆盖）。
+- 新增代码：`src/main.ts`、`src/types/**`、`src/stores/**`（Pinia setup store：登录态、购物车、管理员态）、`src/config/**`、`src/pages/**`（用户端页面）、`src/pages-admin/**`（管理端分包）、`src/api/**`（TS 契约与请求封装）、`src/mock/**`（mock 数据与适配层）、`src/components/**`（仅业务特有组件，通用交互复用 uView Pro）、`src/utils/**`（价格、路由守卫、存储）。
+- 依赖：新增 `uview-pro@0.6.23`、`pinia@2.1.7`、`typescript`、`vue-tsc`、`@vue/tsconfig`、`@types/node`、`sass@1.63.2`；移除 `@dcloudio` 中非 H5/微信小程序的平台包；Vue 保持 `3.4.21` 与编译器配套。
+- 构建目标：仅 H5 与微信小程序，脚本收敛为 `dev:h5`、`build:h5`、`dev:mp-weixin`、`build:mp-weixin`、`type-check`。
 - 外部系统：微信登录与支付接口仅按契约占位，真实对接延后到服务端立项阶段。
