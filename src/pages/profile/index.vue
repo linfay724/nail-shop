@@ -8,15 +8,6 @@
       </view>
     </view>
 
-    <view class="order-panel">
-      <view class="panel-title">我的订单</view>
-      <view class="order-status">
-        <view v-for="item in statusEntries" :key="item.value" class="status-item" @click="goOrders(item.value)">
-          <text class="status-name">{{ item.name }}</text>
-        </view>
-      </view>
-    </view>
-
     <u-cell-group>
       <u-cell-item title="我的收藏" :arrow="true" @click="goFavorite" />
       <u-cell-item title="收货地址" :arrow="true" @click="goAddress" />
@@ -32,35 +23,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useSessionStore } from '@/stores/session'
 import { useAdminStore } from '@/stores/admin'
 import { requireAuth } from '@/utils/auth-guard'
 import { ADMIN_AUTH_PAGE } from '@/utils/admin-guard'
-import { setStorage } from '@/utils/storage'
 import LoginSheet from '@/components/login-sheet.vue'
 
 const session = useSessionStore()
 const admin = useAdminStore()
 
-const statusEntries = computed(() => [
-  { name: '待付款', value: 'pending_pay' },
-  { name: '待发货', value: 'pending_ship' },
-  { name: '待收货', value: 'pending_receive' },
-  { name: '已完成', value: 'completed' },
-])
-
 function handleLoginEntry(): void {
   if (!session.isLoggedIn) {
     requireAuth()
   }
-}
-
-function goOrders(status: string): void {
-  requireAuth(() => {
-    setStorage('order_filter', status)
-    uni.switchTab({ url: '/pages/order/list' })
-  })
 }
 
 function goFavorite(): void {
@@ -93,18 +68,22 @@ function handleVersionLongPress(): void {
 }
 
 .header {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  padding: $app-space-base;
-  background: linear-gradient(135deg, #f7ece8, #ffffff);
+  padding: $app-space-lg $app-space-base;
+  background: linear-gradient(120deg, #ffd9e8 0%, #fff3f8 50%, #dcefff 100%);
   border-radius: $app-radius-lg;
 }
 
 .avatar {
   width: 120rpx;
   height: 120rpx;
+  border: 6rpx solid #ffffff;
   border-radius: 50%;
   background-color: #fff;
+  box-shadow: $app-shadow;
 }
 
 .info {
@@ -123,35 +102,6 @@ function handleVersionLongPress(): void {
   margin-top: $app-space-xs;
   font-size: $app-font-sm;
   color: $app-color-text-secondary;
-}
-
-.order-panel {
-  margin: $app-space-base 0;
-  padding: $app-space-sm;
-  background-color: #fff;
-  border-radius: $app-radius-base;
-}
-
-.panel-title {
-  padding: $app-space-xs $app-space-sm;
-  font-size: $app-font-base;
-  color: $app-color-text;
-  font-weight: 600;
-}
-
-.order-status {
-  display: flex;
-}
-
-.status-item {
-  flex: 1;
-  padding: $app-space-sm 0;
-  text-align: center;
-}
-
-.status-name {
-  font-size: $app-font-sm;
-  color: $app-color-text;
 }
 
 .contact {

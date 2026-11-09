@@ -76,19 +76,26 @@ $uni-color-paragraph: #3f536e; // 文章段落颜色
 $uni-font-size-paragraph: 15px;
 
 /* ---------------------------------------------------------------
- * 项目设计 token（豆沙 / 裸粉系）
+ * 项目设计 token（粉蓝 / 小可爱系）
  * 必须先于 uView Pro 主题声明，保证可覆盖其默认变量
  * ------------------------------------------------------------- */
-$app-color-primary: #c98b7a;
-$app-color-primary-dark: #b3735f;
-$app-color-primary-light: #f7ece8;
-$app-color-text: #3d3230;
-$app-color-text-secondary: #8c7f7b;
-$app-color-border: #efe6e2;
-$app-color-bg: #fdfaf8;
-$app-radius-sm: 8rpx;
-$app-radius-base: 16rpx;
-$app-radius-lg: 24rpx;
+$app-color-primary: #ff8fb1; // 樱花粉
+$app-color-primary-dark: #f2729d;
+$app-color-primary-light: #fff0f6;
+$app-color-secondary: #8ec9f5; // 婴儿蓝
+$app-color-secondary-dark: #6fb4ea;
+$app-color-secondary-light: #eef7ff;
+$app-color-text: #514b63; // 柔和紫灰
+$app-color-text-secondary: #a29cbd;
+$app-color-border: #f3edf8;
+$app-color-bg: #faf9fe; // 粉蓝雾底
+$app-color-danger: #ff7d9c;
+$app-radius-sm: 12rpx;
+$app-radius-base: 24rpx;
+$app-radius-lg: 32rpx;
+$app-radius-pill: 999rpx;
+$app-shadow: 0 8rpx 28rpx rgba(255, 143, 177, 0.14);
+$app-shadow-blue: 0 8rpx 28rpx rgba(142, 201, 245, 0.18);
 $app-space-xs: 8rpx;
 $app-space-sm: 16rpx;
 $app-space-base: 24rpx;

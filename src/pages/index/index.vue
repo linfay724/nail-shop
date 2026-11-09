@@ -1,27 +1,49 @@
 <template>
   <view class="home">
-    <u-swiper v-if="banners.length > 0" :list="banners" height="300" radius="24" />
+    <view class="hero">
+      <view class="hero-bubble bubble-pink" />
+      <view class="hero-bubble bubble-blue" />
+      <view class="hero-text">
+        <text class="hero-title">Hi~ 今天想换哪副指甲呀</text>
+        <text class="hero-sub">手作穿戴甲 · 测量即合 · 现货直发</text>
+      </view>
+    </view>
+
+    <view v-if="banners.length > 0" class="banner-wrap">
+      <u-swiper :list="banners" height="300" radius="32" />
+    </view>
 
     <view class="section">
-      <view class="section-title">按风格挑选</view>
+      <view class="section-title">
+        <text class="dot dot-pink" />
+        按风格挑选
+        <text class="dot dot-blue" />
+      </view>
       <view class="chips">
-        <text v-for="style in STYLE_OPTIONS" :key="style" class="chip" @click="goList({ style })">
+        <text v-for="style in STYLE_OPTIONS" :key="style" class="chip chip-pink" @click="goList({ style })">
           {{ style }}
         </text>
       </view>
     </view>
 
     <view class="section">
-      <view class="section-title">按甲型挑选</view>
+      <view class="section-title">
+        <text class="dot dot-blue" />
+        按甲型挑选
+        <text class="dot dot-pink" />
+      </view>
       <view class="chips">
-        <text v-for="shape in SHAPE_OPTIONS" :key="shape" class="chip" @click="goList({ shape })">
+        <text v-for="shape in SHAPE_OPTIONS" :key="shape" class="chip chip-blue" @click="goList({ shape })">
           {{ shape }}
         </text>
       </view>
     </view>
 
     <view class="section">
-      <view class="section-title">店长推荐</view>
+      <view class="section-title">
+        <text class="dot dot-pink" />
+        店长推荐
+      </view>
       <view v-if="loading" class="loading">加载中…</view>
       <u-empty v-else-if="recommend.length === 0" mode="list" text="暂无推荐商品" />
       <view v-else class="grid">
@@ -83,7 +105,59 @@ onShow(() => {
 .home {
   min-height: 100vh;
   padding: $app-space-base;
-  background-color: $app-color-bg;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: $app-space-base;
+  padding: $app-space-lg $app-space-base;
+  background: linear-gradient(120deg, #ffd9e8 0%, #ffeef5 45%, #dcefff 100%);
+  border-radius: $app-radius-lg;
+}
+
+.hero-bubble {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+.bubble-pink {
+  top: -30rpx;
+  right: -20rpx;
+  width: 140rpx;
+  height: 140rpx;
+  background: #ffb7cf;
+}
+
+.bubble-blue {
+  bottom: -40rpx;
+  right: 120rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background: #a8d4f7;
+}
+
+.hero-text {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-title {
+  font-size: $app-font-lg;
+  color: $app-color-text;
+  font-weight: 700;
+}
+
+.hero-sub {
+  margin-top: $app-space-xs;
+  font-size: $app-font-sm;
+  color: $app-color-text-secondary;
+}
+
+.banner-wrap {
+  margin-bottom: $app-space-base;
 }
 
 .section {
@@ -91,10 +165,27 @@ onShow(() => {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
   margin-bottom: $app-space-sm;
   font-size: $app-font-base;
   color: $app-color-text;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.dot {
+  width: 14rpx;
+  height: 14rpx;
+  margin: 0 $app-space-xs;
+  border-radius: 50%;
+}
+
+.dot-pink {
+  background-color: $app-color-primary;
+}
+
+.dot-blue {
+  background-color: $app-color-secondary;
 }
 
 .chips {
@@ -104,11 +195,20 @@ onShow(() => {
 
 .chip {
   margin: 0 $app-space-sm $app-space-sm 0;
-  padding: 12rpx 24rpx;
+  padding: 12rpx 28rpx;
   font-size: $app-font-sm;
-  color: $app-color-text;
   background-color: #fff;
-  border-radius: $app-radius-lg;
+  border-radius: $app-radius-pill;
+}
+
+.chip-pink {
+  color: $app-color-primary-dark;
+  border: 2rpx solid #ffd9e8;
+}
+
+.chip-blue {
+  color: $app-color-secondary-dark;
+  border: 2rpx solid #d5ebfc;
 }
 
 .loading {

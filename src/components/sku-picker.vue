@@ -191,16 +191,18 @@ function confirm(mode: 'cart' | 'buy'): void {
 
 .chip {
   margin: 0 $app-space-xs $app-space-xs 0;
-  padding: 10rpx 24rpx;
+  padding: 10rpx 28rpx;
   font-size: $app-font-sm;
   color: $app-color-text;
-  background-color: #f5f5f5;
-  border-radius: $app-radius-sm;
+  background-color: #f7f6fb;
+  border-radius: $app-radius-pill;
+  border: 2rpx solid transparent;
 }
 
 .active {
-  color: #fff;
-  background-color: $app-color-primary;
+  color: $app-color-primary-dark;
+  background-color: $app-color-primary-light;
+  border-color: #ffd9e8;
 }
 
 .quantity {

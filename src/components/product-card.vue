@@ -27,7 +27,9 @@ const emit = defineEmits<{ (event: 'click', product: PublicProduct): void }>()
 .product-card {
   overflow: hidden;
   background-color: #fff;
-  border-radius: $app-radius-base;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
+  transition: transform 0.2s ease;
 }
 
 .cover {
@@ -63,10 +65,19 @@ const emit = defineEmits<{ (event: 'click', product: PublicProduct): void }>()
 
 .tag {
   margin-right: $app-space-xs;
-  padding: 0 12rpx;
+  padding: 4rpx 16rpx;
   font-size: $app-font-xs;
-  color: $app-color-primary;
+  border-radius: $app-radius-pill;
+}
+
+/* 第一个标签粉色、第二个蓝色，交错点缀 */
+.tag:first-of-type {
+  color: $app-color-primary-dark;
   background-color: $app-color-primary-light;
-  border-radius: $app-radius-sm;
+}
+
+.tag:nth-of-type(2) {
+  color: $app-color-secondary-dark;
+  background-color: $app-color-secondary-light;
 }
 </style>

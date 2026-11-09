@@ -12,6 +12,6 @@ defineProps<{ price: number }>()
 .price-tag {
   font-size: $app-font-lg;
   color: $app-color-primary;
-  font-weight: 600;
+  font-weight: 700;
 }
 </style>

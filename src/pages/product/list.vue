@@ -124,16 +124,18 @@ onShow(() => {
 
 .chip {
   margin: 0 $app-space-xs $app-space-xs 0;
-  padding: 8rpx 20rpx;
+  padding: 8rpx 24rpx;
   font-size: $app-font-sm;
   color: $app-color-text;
   background-color: #fff;
-  border-radius: $app-radius-lg;
+  border-radius: $app-radius-pill;
+  border: 2rpx solid $app-color-border;
 }
 
 .active {
-  color: #fff;
-  background-color: $app-color-primary;
+  color: $app-color-primary-dark;
+  background-color: $app-color-primary-light;
+  border-color: #ffd9e8;
 }
 
 .clear {

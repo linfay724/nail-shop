@@ -146,8 +146,8 @@
 		}
 	},
 	"tabBar": {
-		"color": "#8c7f7b",
-		"selectedColor": "#c98b7a",
+		"color": "#b9b4cc",
+		"selectedColor": "#ff8fb1",
 		"backgroundColor": "#ffffff",
 		"borderStyle": "white",
 		"list": [
@@ -186,7 +186,7 @@
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "穿戴甲小店",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"navigationBarBackgroundColor": "#FFF6FA",
+		"backgroundColor": "#FAF9FE"
 	}
 }

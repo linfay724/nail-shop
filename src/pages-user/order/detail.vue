@@ -197,8 +197,8 @@ function applyAfterSale(): void {
 .status-bar {
   padding: $app-space-base;
   margin-bottom: $app-space-base;
-  background: linear-gradient(135deg, #f7ece8, #fff);
-  border-radius: $app-radius-base;
+  background: linear-gradient(120deg, #ffe3ef 0%, #fff6fa 55%, #e3f1ff 100%);
+  border-radius: $app-radius-lg;
 }
 
 .status {

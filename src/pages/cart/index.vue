@@ -117,7 +117,8 @@ onShow(() => {
   margin-bottom: $app-space-sm;
   padding: $app-space-sm;
   background-color: #fff;
-  border-radius: $app-radius-base;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
 }
 
 .invalid {
