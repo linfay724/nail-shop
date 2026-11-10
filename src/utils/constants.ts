@@ -16,6 +16,14 @@ export const ORDER_STATUS_TABS = [
   { name: '已完成', value: 'completed' },
 ] as const
 
+/** 管理端订单筛选：「售后」按是否存在协商记录筛选 */
+export const ADMIN_ORDER_TABS = [
+  { name: '全部', value: 'all' },
+  { name: '待发货', value: 'pending_ship' },
+  { name: '待收货', value: 'pending_receive' },
+  { name: '售后', value: 'aftersale' },
+] as const
+
 export const MATERIAL_CATEGORY_LABELS: Record<string, string> = {
   tip: '甲片',
   gel: '甲油胶',

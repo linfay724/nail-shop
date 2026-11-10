@@ -1,9 +1,9 @@
 <template>
   <view class="favorite">
-    <view v-if="list.length === 0" class="empty">
+    <view v-if="favorite.list.length === 0 && !loading" class="empty">
       <u-empty mode="favor" text="还没有收藏商品" />
     </view>
-    <view v-for="item in list" :key="item.id" class="item" @click="openDetail(item)">
+    <view v-for="item in favorite.list" :key="item.id" class="item" @click="openDetail(item)">
       <image class="cover" :src="item.cover" mode="aspectFill" />
       <view class="info">
         <text class="name">{{ item.name }}</text>
@@ -12,23 +12,36 @@
       </view>
       <u-button size="small" plain @click.stop="remove(item.id)">移除</u-button>
     </view>
+
+    <view v-if="favorite.list.length > 0" class="footer">
+      <text v-if="loading">加载中…</text>
+      <text v-else-if="!favorite.hasMore">没有更多了</text>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { favoriteApi } from '@/api/favorite'
+import { onReachBottom, onShow } from '@dcloudio/uni-app'
 import { toastError } from '@/api/transport'
 import type { PublicProduct } from '@/api/contract'
 import { formatPrice } from '@/utils/price'
+import { useFavoriteStore } from '@/stores/favorite'
 
-const list = ref<PublicProduct[]>([])
+const favorite = useFavoriteStore()
+const loading = ref(false)
 
-async function load(): Promise<void> {
+async function load(reset = true): Promise<void> {
+  loading.value = true
   try {
-    list.value = await favoriteApi.list()
+    await favorite.loadList(reset)
+    if (reset) {
+      await favorite.loadIds()
+    }
   } catch (error) {
     toastError(error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -42,14 +55,22 @@ function openDetail(item: PublicProduct): void {
 
 async function remove(id: string): Promise<void> {
   try {
-    await favoriteApi.toggle(id)
-    list.value = list.value.filter((item) => item.id !== id)
+    await favorite.toggle(id)
+    favorite.list = favorite.list.filter((item) => item.id !== id)
   } catch (error) {
     toastError(error)
   }
 }
 
-void load()
+onShow(() => {
+  void load(true)
+})
+
+onReachBottom(() => {
+  if (favorite.hasMore && !loading.value) {
+    void load(false)
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -66,10 +87,12 @@ void load()
 .item {
   display: flex;
   align-items: center;
-  margin-bottom: $app-space-sm;
-  padding: $app-space-sm;
-  background-color: #fff;
-  border-radius: $app-radius-base;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
 }
 
 .cover {
@@ -92,12 +115,20 @@ void load()
 
 .price {
   margin-top: $app-space-xs;
-  font-size: $app-font-base;
-  color: $app-color-primary;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: $app-color-primary-dark;
 }
 
 .offsale {
   margin-top: $app-space-xs;
+  font-size: $app-font-xs;
+  color: $app-color-text-secondary;
+}
+
+.footer {
+  padding: $app-space-base 0;
+  text-align: center;
   font-size: $app-font-xs;
   color: $app-color-text-secondary;
 }

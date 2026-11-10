@@ -13,38 +13,38 @@
         <text class="group-title">尺码</text>
         <view class="chips">
           <text
-            v-for="size in sizes"
+            v-for="size in SIZE_OPTIONS"
             :key="size"
             class="chip"
-            :class="{ active: selectedSize === size }"
-            @click="selectedSize = size"
+            :class="{ active: selectedSize === size, disabled: !sizeAvailable(size) }"
+            @click="pickSize(size)"
           >
-            {{ size }}
+            {{ SIZE_LABELS[size] }}
           </text>
         </view>
       </view>
 
       <view class="group">
-        <text class="group-title">甲片数量</text>
+        <text class="group-title">甲型</text>
         <view class="chips">
           <text
-            v-for="count in pieceCounts"
-            :key="count"
+            v-for="shape in SHAPE_OPTIONS"
+            :key="shape"
             class="chip"
-            :class="{ active: selectedPieceCount === count }"
-            @click="selectedPieceCount = count"
+            :class="{ active: selectedShape === shape, disabled: shapeState(shape) !== 'ok' }"
+            @click="pickShape(shape)"
           >
-            {{ count }} 片
+            {{ SHAPE_LABELS[shape] }}
           </text>
         </view>
       </view>
 
+      <view v-if="needsCustomNote" class="hint">选择「其他」需在下单页填写定制备注</view>
+
       <view class="group quantity">
-        <text class="group-title">数量</text>
+        <text class="group-title">数量（副）</text>
         <u-number-box v-model="quantity" :min="1" :max="Math.max(selectedSku?.stock ?? 1, 1)" />
       </view>
-
-      <text class="guide" @click="openGuide">如何测量尺码 ›</text>
 
       <view class="actions">
         <u-button :disabled="!purchasable" custom-style="flex: 1" @click="confirm('cart')">
@@ -65,7 +65,16 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { ProductSku, PublicProductDetail } from '@/api/contract'
+import {
+  SHAPE_LABELS,
+  SHAPE_OPTIONS,
+  SIZE_LABELS,
+  SIZE_OPTIONS,
+  type ProductSku,
+  type PublicProductDetail,
+  type Shape,
+  type Size,
+} from '@/api/contract'
 import PriceTag from '@/components/price-tag.vue'
 
 const props = defineProps<{ show: boolean; product: PublicProductDetail | null }>()
@@ -74,70 +83,105 @@ const emit = defineEmits<{
   (event: 'confirm', payload: { sku: ProductSku; quantity: number; mode: 'cart' | 'buy' }): void
 }>()
 
-const selectedSize = ref('')
-const selectedPieceCount = ref(0)
+const selectedSize = ref<Size | null>(null)
+const selectedShape = ref<Shape | null>(null)
 const quantity = ref(1)
 
-const sizes = computed(() => Array.from(new Set(props.product?.skus.map((sku) => sku.size) ?? [])))
-const pieceCounts = computed(() =>
-  Array.from(
-    new Set(
-      (props.product?.skus ?? [])
-        .filter((sku) => !selectedSize.value || sku.size === selectedSize.value)
-        .map((sku) => sku.pieceCount),
-    ),
-  ),
-)
+function skuOf(size: Size, shape: Shape): ProductSku | undefined {
+  return props.product?.skus.find((sku) => sku.size === size && sku.shape === shape)
+}
+
+function sizeAvailable(size: Size): boolean {
+  return (props.product?.skus ?? []).some((sku) => sku.size === size)
+}
+
+function shapeState(shape: Shape): 'ok' | 'missing' | 'soldout' {
+  if (!selectedSize.value) {
+    return 'missing'
+  }
+  const sku = skuOf(selectedSize.value, shape)
+  if (!sku) {
+    return 'missing'
+  }
+  return sku.stock > 0 ? 'ok' : 'soldout'
+}
 
 const selectedSku = computed<ProductSku | null>(() => {
-  if (!props.product || !selectedSize.value || !selectedPieceCount.value) {
+  if (!selectedSize.value || !selectedShape.value) {
     return null
   }
-
-  return (
-    props.product.skus.find(
-      (sku) => sku.size === selectedSize.value && sku.pieceCount === selectedPieceCount.value,
-    ) ?? null
-  )
+  return skuOf(selectedSize.value, selectedShape.value) ?? null
 })
+
+const needsCustomNote = computed(
+  () => selectedSize.value === 'OTHER' || selectedShape.value === 'OTHER',
+)
 
 const purchasable = computed(() => Boolean(selectedSku.value && selectedSku.value.stock > 0))
 const currentPrice = computed(
-  () => (props.product?.price ?? 0) + (selectedSku.value?.priceDelta ?? 0),
+  () => (props.product?.price ?? 0) + (selectedSku.value?.priceDiff ?? 0),
 )
-const stockText = computed(() => (selectedSku.value ? `库存 ${selectedSku.value.stock} 件` : '请选择规格'))
+const stockText = computed(() => {
+  if (!selectedSize.value) {
+    return '请选择尺码'
+  }
+  if (!selectedShape.value) {
+    return '请选择甲型'
+  }
+  if (!selectedSku.value) {
+    return '该组合未提供'
+  }
+  if (selectedSku.value.stock <= 0) {
+    return '该组合已售罄'
+  }
+  return `库存 ${selectedSku.value.stock} 副`
+})
 
 watch(
   () => props.show,
   (visible) => {
     if (visible) {
-      selectedSize.value = ''
-      selectedPieceCount.value = 0
+      selectedSize.value = null
+      selectedShape.value = null
       quantity.value = 1
     }
   },
 )
 
-watch(selectedSize, () => {
-  selectedPieceCount.value = 0
-})
+function pickSize(size: Size): void {
+  if (!sizeAvailable(size)) {
+    uni.showToast({ title: '该尺码未提供', icon: 'none' })
+    return
+  }
+  selectedSize.value = size
+  selectedShape.value = null
+}
+
+function pickShape(shape: Shape): void {
+  const state = shapeState(shape)
+  if (state === 'missing') {
+    uni.showToast({ title: '该组合未提供', icon: 'none' })
+    return
+  }
+  if (state === 'soldout') {
+    uni.showToast({ title: '该组合已售罄', icon: 'none' })
+    return
+  }
+  selectedShape.value = shape
+}
 
 function close(): void {
   emit('update:show', false)
 }
 
-function openGuide(): void {
-  uni.navigateTo({ url: '/pages-user/guide/size' })
-}
-
 function confirm(mode: 'cart' | 'buy'): void {
   if (!selectedSku.value) {
-    uni.showToast({ title: '请先选择规格', icon: 'none' })
+    uni.showToast({ title: '请先选择尺码与甲型', icon: 'none' })
     return
   }
 
   if (selectedSku.value.stock <= 0) {
-    uni.showToast({ title: '该规格已售罄', icon: 'none' })
+    uni.showToast({ title: '该组合已售罄', icon: 'none' })
     return
   }
 
@@ -157,52 +201,71 @@ function confirm(mode: 'cart' | 'buy'): void {
 }
 
 .cover {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: $app-radius-base;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 20rpx;
+  background-color: $app-color-input-bg;
 }
 
 .head-info {
   display: flex;
   flex-direction: column;
-  margin-left: $app-space-sm;
+  margin-left: 20rpx;
 }
 
 .stock {
-  margin-top: $app-space-xs;
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: $app-color-text-muted;
 }
 
 .group {
-  margin-top: $app-space-base;
+  margin-top: 24rpx;
 }
 
 .group-title {
-  font-size: $app-font-sm;
-  color: $app-color-text;
+  font-size: 22rpx;
+  color: $app-color-text-secondary;
 }
 
 .chips {
   display: flex;
   flex-wrap: wrap;
-  margin-top: $app-space-xs;
+  margin-top: 10rpx;
 }
 
 .chip {
-  margin: 0 $app-space-xs $app-space-xs 0;
-  padding: 10rpx 28rpx;
-  font-size: $app-font-sm;
-  color: $app-color-text;
-  background-color: #f7f6fb;
-  border-radius: $app-radius-pill;
-  border: 2rpx solid transparent;
+  margin: 0 12rpx 12rpx 0;
+  padding: 10rpx 20rpx;
+  font-size: 22rpx;
+  color: $app-color-text-secondary;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: 20rpx;
 }
 
 .active {
   color: $app-color-primary-dark;
   background-color: $app-color-primary-light;
-  border-color: #ffd9e8;
+  border-color: $app-color-primary-hover;
+}
+
+.disabled {
+  color: #c8bfbd;
+  background-color: #f5f2f1;
+  text-decoration: line-through;
+}
+
+/* 与原型 .note 一致 */
+.hint {
+  margin-top: 16rpx;
+  padding: 18rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: $app-color-warning-text;
+  background-color: $app-color-warning-bg-soft;
+  border: 1rpx dashed $app-color-warning;
+  border-radius: 20rpx;
 }
 
 .quantity {
@@ -211,15 +274,8 @@ function confirm(mode: 'cart' | 'buy'): void {
   justify-content: space-between;
 }
 
-.guide {
-  display: inline-block;
-  margin-top: $app-space-sm;
-  font-size: $app-font-sm;
-  color: $app-color-primary;
-}
-
 .actions {
   display: flex;
-  margin-top: $app-space-base;
+  margin-top: 28rpx;
 }
 </style>

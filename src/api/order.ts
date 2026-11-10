@@ -1,7 +1,14 @@
-import type { AfterSaleType, OrderItem, OrderStatus, PublicOrder } from './contract'
+import type { OrderItem, OrderStatus, PublicOrder } from './contract'
 import { request } from './transport'
 
 export type OrderFilter = OrderStatus | 'all'
+
+export interface CreateOrderPayload {
+  items: OrderItem[]
+  addressId: string
+  /** 含「其他」尺码或甲型时必填 */
+  customNote?: string
+}
 
 export const orderApi = {
   list(status: OrderFilter = 'all'): Promise<PublicOrder[]> {
@@ -10,7 +17,7 @@ export const orderApi = {
   detail(id: string): Promise<PublicOrder> {
     return request<PublicOrder>('order/detail', { id }, { publicResponse: true })
   },
-  create(payload: { items: OrderItem[]; addressId: string; remark: string }): Promise<PublicOrder> {
+  create(payload: CreateOrderPayload): Promise<PublicOrder> {
     return request<PublicOrder>('order/create', { ...payload }, { publicResponse: true })
   },
   pay(id: string): Promise<PublicOrder> {
@@ -21,13 +28,5 @@ export const orderApi = {
   },
   confirm(id: string): Promise<PublicOrder> {
     return request<PublicOrder>('order/confirm', { id }, { publicResponse: true })
-  },
-  applyAfterSale(payload: {
-    id: string
-    type: AfterSaleType
-    reason: string
-    description: string
-  }): Promise<PublicOrder> {
-    return request<PublicOrder>('order/aftersale', { ...payload }, { publicResponse: true })
   },
 }

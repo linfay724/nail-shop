@@ -3,13 +3,13 @@
     <image class="cover" :src="product.cover" mode="aspectFill" lazy-load />
     <view class="info">
       <text class="name">{{ product.name }}</text>
-      <view class="meta">
-        <price-tag :price="product.price" />
-        <text class="sales">已售 {{ product.sales }}</text>
-      </view>
       <view class="tags">
-        <text class="tag">{{ product.style }}</text>
-        <text class="tag">{{ product.shape }}</text>
+        <text v-if="product.tags.length > 0" class="tag">{{ product.tags[0] }}</text>
+        <text class="tag tag-gray">{{ product.style }}</text>
+      </view>
+      <view class="meta">
+        <price-tag :price="product.price" :unit="product.isAccessory ? '/件' : '/副'" />
+        <text class="sales">已售{{ product.sales }}</text>
       </view>
     </view>
   </view>
@@ -25,59 +25,64 @@ const emit = defineEmits<{ (event: 'click', product: PublicProduct): void }>()
 
 <style lang="scss" scoped>
 .product-card {
+  min-width: 0;
   overflow: hidden;
-  background-color: #fff;
-  border-radius: $app-radius-lg;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: 26rpx;
   box-shadow: $app-shadow;
-  transition: transform 0.2s ease;
 }
 
 .cover {
   width: 100%;
-  height: 320rpx;
+  height: 208rpx;
+  background-color: $app-color-input-bg;
 }
 
 .info {
-  padding: $app-space-sm;
+  padding: 16rpx 16rpx 18rpx;
 }
 
 .name {
-  font-size: $app-font-base;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 24rpx;
+  font-weight: 600;
   color: $app-color-text;
+}
+
+.tags {
+  display: flex;
+  margin-top: 10rpx;
+  white-space: nowrap;
+}
+
+.tag {
+  margin-right: 6rpx;
+  padding: 4rpx 12rpx;
+  font-size: 16rpx;
+  color: $app-color-primary-dark;
+  background-color: $app-color-primary-light;
+  border-radius: $app-radius-pill;
+}
+
+.tag-gray {
+  color: $app-color-text-muted;
+  background-color: #f4f1f0;
 }
 
 .meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: $app-space-xs;
+  margin-top: 12rpx;
 }
 
 .sales {
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
-}
-
-.tags {
-  display: flex;
-  margin-top: $app-space-xs;
-}
-
-.tag {
-  margin-right: $app-space-xs;
-  padding: 4rpx 16rpx;
-  font-size: $app-font-xs;
-  border-radius: $app-radius-pill;
-}
-
-/* 第一个标签粉色、第二个蓝色，交错点缀 */
-.tag:first-of-type {
-  color: $app-color-primary-dark;
-  background-color: $app-color-primary-light;
-}
-
-.tag:nth-of-type(2) {
-  color: $app-color-secondary-dark;
-  background-color: $app-color-secondary-light;
+  font-size: 16rpx;
+  color: $app-color-text-muted;
+  white-space: nowrap;
 }
 </style>

@@ -22,43 +22,63 @@ export default defineComponent({
 
 /* uView Pro 的主题变量在 theme.scss 中直接声明，覆盖必须放在其后 */
 page {
-  /* 主色：樱花粉 */
-  --u-type-primary: #ff8fb1;
-  --u-type-primary-rgb: 255, 143, 177;
-  --u-type-primary-dark: #f2729d;
-  --u-type-primary-dark-rgb: 242, 114, 157;
-  --u-type-primary-disabled: #ffd3e2;
-  --u-type-primary-disabled-rgb: 255, 211, 226;
-  --u-type-primary-light: #fff0f6;
-  --u-type-primary-light-rgb: 255, 240, 246;
+  /* 主色：莓果（与原型 .btn / .price 一致），主色衬底为标签粉 */
+  --u-type-primary: #8c3b4a;
+  --u-type-primary-rgb: 140, 59, 74;
+  --u-type-primary-dark: #73303c;
+  --u-type-primary-dark-rgb: 115, 48, 60;
+  --u-type-primary-disabled: #d8d2d1;
+  --u-type-primary-disabled-rgb: 216, 210, 209;
+  --u-type-primary-light: #fdf3f4;
+  --u-type-primary-light-rgb: 253, 243, 244;
 
-  /* 信息色：婴儿蓝 */
-  --u-type-info: #8ec9f5;
-  --u-type-info-rgb: 142, 201, 245;
-  --u-type-info-light: #eef7ff;
-  --u-type-info-light-rgb: 238, 247, 255;
+  /* 信息色：薰衣草 */
+  --u-type-info: #7c6cf0;
+  --u-type-info-rgb: 124, 108, 240;
+  --u-type-info-light: #f0edff;
+  --u-type-info-light-rgb: 240, 237, 255;
 
-  /* 文字与底色：柔和紫灰 */
-  --u-main-color: #514b63;
-  --u-content-color: #6f688a;
-  --u-tips-color: #a29cbd;
-  --u-light-color: #c9c4da;
-  --u-border-color: #f3edf8;
-  --u-bg-color: #faf9fe;
+  /* 文字与底色：暖灰 */
+  --u-main-color: #3a3335;
+  --u-content-color: #756b6d;
+  --u-tips-color: #9a8f91;
+  --u-light-color: #c8bfbd;
+  --u-border-color: #f0eae8;
+  --u-bg-color: #faf7f5;
 
-  background-color: #faf9fe;
-  /* 粉蓝雾面渐变底 */
-  background-image: linear-gradient(180deg, #fff4f9 0%, #f7faff 40%, #faf9fe 100%);
-  background-attachment: fixed;
+  background-color: #faf7f5;
 }
 
 /* 全局胶囊按钮 */
 .u-button {
   border-radius: 999rpx;
+  font-weight: 600;
 }
 
-/* 弹层顶部圆角统一加大 */
+/* 弹层顶部圆角 */
 .u-popup__content {
-  border-radius: 32rpx 32rpx 0 0;
+  border-radius: 28rpx 28rpx 0 0;
+}
+
+/**
+ * 管理端主题：页面根节点加 .admin-theme 即把 uView 主色切换为原型的管理端紫，
+ * 与用户端的莓果主色区分。
+ */
+.admin-theme {
+  --u-type-primary: #7c6cf0;
+  --u-type-primary-rgb: 124, 108, 240;
+  --u-type-primary-dark: #6a5ae0;
+  --u-type-primary-dark-rgb: 106, 90, 224;
+  --u-type-primary-disabled: #d9d4f7;
+  --u-type-primary-disabled-rgb: 217, 212, 247;
+  --u-type-primary-light: #f0edff;
+  --u-type-primary-light-rgb: 240, 237, 255;
+  --u-type-info: #7c6cf0;
+  --u-type-info-light: #f0edff;
+  --u-main-color: #3a3335;
+  --u-content-color: #756b6d;
+  --u-tips-color: #9a8f91;
+  --u-border-color: #f0eae8;
+  --u-bg-color: #f5f4f3;
 }
 </style>

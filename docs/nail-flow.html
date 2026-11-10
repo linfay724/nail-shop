@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>穿戴甲小程序 · 页面流程图</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:#eef1f5; color:#222; padding:26px 16px 50px;
+  }
+  h1 { text-align:center; font-size:22px; margin-bottom:4px; }
+  .sub { text-align:center; color:#888; font-size:12px; margin-bottom:18px; }
+
+  .legend {
+    max-width:1180px; margin:0 auto 18px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+    font-size:12px; color:#555;
+  }
+  .legend span { background:#fff; border:1px solid #dde3ea; border-radius:20px; padding:5px 12px; display:flex; align-items:center; gap:6px;}
+  .dot { display:inline-block; width:10px; height:10px; border-radius:3px; }
+  .dot.pub{background:#e7f7ee;border:1.5px solid #2fb36a;}
+  .dot.own{background:#fdf3e2;border:1.5px solid #e8a13a;}
+  .dot.art{background:#efedfd;border:1.5px solid #7c6cf0;}
+  .dot.no{background:#fdeaea;border:1.5px solid #e05555;}
+  .dot.dec{background:#fff;border:1.5px solid #889;transform:rotate(45deg);}
+
+  .canvas-wrap {
+    max-width:1180px; margin:0 auto; background:#fff; border-radius:16px;
+    box-shadow:0 8px 28px rgba(0,0,0,.08); padding:20px; overflow-x:auto;
+  }
+  svg { display:block; margin:0 auto; min-width:1000px; }
+
+  /* 节点样式 */
+  .node rect { stroke-width:1.6; rx:10; ry:10; transition:.15s; cursor:default;}
+  .node text { font-size:12px; font-weight:600; fill:#334; pointer-events:none;}
+  .node .role { font-size:9px; font-weight:400; fill:#889;}
+  .node.pub rect { fill:#f1fbf5; stroke:#2fb36a; }
+  .node.own rect { fill:#fdf8ee; stroke:#e8a13a; }
+  .node.art rect { fill:#f5f3ff; stroke:#7c6cf0; }
+  .node.no rect { fill:#fdf0f0; stroke:#e05555; }
+  .node.dec rect { fill:#f4f6f8; stroke:#889; }
+
+  .edge { stroke:#b9c2cd; stroke-width:1.6; fill:none; transition:.15s;}
+  .edge.dash { stroke-dasharray:5 4; }
+  .edge.priv { stroke:#e8a13a; stroke-dasharray:6 4; }
+  .edge.deny { stroke:#e05555; stroke-dasharray:4 4; }
+  .elabel { font-size:9.5px; fill:#889; }
+  .elabel.warn { fill:#e05555; }
+  .elabel.priv { fill:#c07a10; }
+
+  .node:hover rect { filter:drop-shadow(0 3px 8px rgba(0,0,0,.12)); }
+  .hl .edge { stroke:#2fb36a; stroke-width:2.4; opacity:1;}
+  .dim .edge { opacity:.18; }
+  .dim .node { opacity:.28; }
+  .dim .node.hl-node { opacity:1; }
+  .dim .node.hl-node rect { filter:drop-shadow(0 3px 10px rgba(47,179,106,.35)); }
+
+  .zone-label { font-size:11px; fill:#aab; font-weight:600; letter-spacing:1px;}
+  .zone-line { stroke:#e3e8ee; stroke-width:1.5; stroke-dasharray:6 5; }
+
+  .tip { text-align:center; font-size:11px; color:#99a; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<h1>穿戴甲小程序 · 页面流程图</h1>
+<p class="sub">悬停节点可高亮其关联连线 ｜ 虚线=权限分流，橙虚线=私有字段，红虚线=拒绝访问</p>
+
+<div class="legend">
+  <span><i class="dot pub"></i>公开页（所有用户）</span>
+  <span><i class="dot own"></i>店主专属</span>
+  <span><i class="dot art"></i>美甲师可读</span>
+  <span><i class="dot no"></i>禁止 / 不下发</span>
+  <span><i class="dot dec"></i>决策节点</span>
+</div>
+
+<div class="canvas-wrap">
+<svg id="flow" viewBox="0 0 1120 860" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#b9c2cd"/>
+    </marker>
+    <marker id="arrowWarn" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#e05555"/>
+    </marker>
+    <marker id="arrowPriv" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#e8a13a"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="9" markerHeight="9" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 Z" fill="#2fb36a"/>
+    </marker>
+  </defs>
+
+  <!-- 区域分隔 -->
+  <line class="zone-line" x1="540" y1="40" x2="540" y2="820"/>
+  <text class="zone-label" x="270" y="34" text-anchor="middle">用户端 · 购买主流程</text>
+  <text class="zone-label" x="830" y="34" text-anchor="middle">管理端 · 扫码与角色分流</text>
+
+  <!-- ================= 用户端节点 ================= -->
+  <g class="node pub" data-id="n-home">
+    <rect x="70" y="70" width="150" height="52"/>
+    <text x="145" y="92" text-anchor="middle">首页</text>
+    <text class="role" x="145" y="108" text-anchor="middle">轮播 / 分类 / 推荐</text>
+  </g>
+
+  <g class="node pub" data-id="n-list">
+    <rect x="270" y="70" width="150" height="52"/>
+    <text x="345" y="92" text-anchor="middle">搜索 / 商品列表</text>
+    <text class="role" x="345" y="108" text-anchor="middle">名称·标签搜索·分页</text>
+  </g>
+
+  <g class="node pub" data-id="n-detail">
+    <rect x="270" y="168" width="150" height="58"/>
+    <text x="345" y="190" text-anchor="middle">商品详情</text>
+    <text class="role" x="345" y="206" text-anchor="middle">图/视频·规格·评价</text>
+    <text class="role" x="345" y="219" text-anchor="middle" style="fill:#e05555">不含材料/步骤/成本</text>
+  </g>
+
+  <g class="node dec" data-id="n-other">
+    <rect x="270" y="270" width="150" height="52" transform="rotate(0)"/>
+    <text x="345" y="292" text-anchor="middle">选尺码 × 甲型</text>
+    <text class="role" x="345" y="308" text-anchor="middle">含「其他」选项</text>
+  </g>
+
+  <g class="node pub" data-id="n-cart">
+    <rect x="70" y="270" width="150" height="52"/>
+    <text x="145" y="292" text-anchor="middle">购物车</text>
+    <text class="role" x="145" y="308" text-anchor="middle">多规格·步进器</text>
+  </g>
+
+  <g class="node pub" data-id="n-order">
+    <rect x="170" y="360" width="160" height="60"/>
+    <text x="250" y="382" text-anchor="middle">确认订单</text>
+    <text class="role" x="250" y="398" text-anchor="middle">定制备注(其他必填)</text>
+    <text class="role" x="250" y="411" text-anchor="middle">满2副包邮/固定运费</text>
+  </g>
+
+  <g class="node pub" data-id="n-pay">
+    <rect x="170" y="458" width="160" height="46"/>
+    <text x="250" y="480" text-anchor="middle">微信支付</text>
+    <text class="role" x="250" y="495" text-anchor="middle">支付结果</text>
+  </g>
+
+  <g class="node pub" data-id="n-orders">
+    <rect x="170" y="542" width="160" height="46"/>
+    <text x="250" y="564" text-anchor="middle">我的订单</text>
+    <text class="role" x="250" y="579" text-anchor="middle">状态流转列表</text>
+  </g>
+
+  <g class="node pub" data-id="n-od">
+    <rect x="170" y="626" width="160" height="52"/>
+    <text x="250" y="648" text-anchor="middle">订单详情</text>
+    <text class="role" x="250" y="664" text-anchor="middle">物流·确认收货</text>
+  </g>
+
+  <g class="node pub" data-id="n-af">
+    <rect x="170" y="716" width="160" height="52"/>
+    <text x="250" y="738" text-anchor="middle">售后协商</text>
+    <text class="role" x="250" y="754" text-anchor="middle">仅联系客服·无线上退款</text>
+  </g>
+
+  <g class="node pub" data-id="n-user">
+    <rect x="70" y="626" width="150" height="52"/>
+    <text x="145" y="648" text-anchor="middle">我的</text>
+    <text class="role" x="145" y="664" text-anchor="middle">订单·收藏·协议</text>
+  </g>
+
+  <!-- 用户端连线 -->
+  <path class="edge" data-from="n-home" data-to="n-list" d="M220,96 L270,96" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-home" data-to="n-detail" d="M145,122 L145,197 L270,197" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-list" data-to="n-detail" d="M345,122 L345,168" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-detail" data-to="n-other" d="M345,226 L345,270" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-detail" data-to="n-cart" d="M270,214 L145,214 L145,270" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-other" data-to="n-order" d="M345,322 L345,340 L250,340 L250,360" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-cart" data-to="n-order" d="M145,322 L145,340 L250,340" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-order" data-to="n-pay" d="M250,420 L250,458" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-pay" data-to="n-orders" d="M250,504 L250,542" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-orders" data-to="n-od" d="M250,588 L250,626" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-od" data-to="n-af" d="M250,678 L250,716" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-user" data-to="n-orders" d="M220,652 L170,652 L170,565" marker-end="url(#arrow)"/>
+  <text class="elabel" x="222" y="120">浏览</text>
+  <text class="elabel" x="352" y="150">进入</text>
+  <text class="elabel" x="252" y="334" text-anchor="middle">结算</text>
+  <text class="elabel" x="256" y="444" text-anchor="middle">支付成功</text>
+  <text class="elabel" x="258" y="610" text-anchor="middle">查看</text>
+
+  <!-- 私有字段不下发（红虚线） -->
+  <path class="edge deny" data-from="n-detail" data-to="n-archive" d="M420,197 L760,197 L760,282" marker-end="url(#arrowWarn)"/>
+  <text class="elabel warn" x="600" y="190" text-anchor="middle">普通用户请求 → 响应体不含 materials/steps/cost</text>
+
+  <!-- ================= 管理端节点 ================= -->
+  <g class="node dec" data-id="n-scan">
+    <rect x="680" y="70" width="170" height="52"/>
+    <text x="765" y="92" text-anchor="middle">扫码进入</text>
+    <text class="role" x="765" y="108" text-anchor="middle">一人一码 · 校验身份/角色</text>
+  </g>
+
+  <g class="node no" data-id="n-deny">
+    <rect x="700" y="168" width="150" height="46"/>
+    <text x="775" y="190" text-anchor="middle">拒绝访问</text>
+    <text class="role" x="775" y="205" text-anchor="middle">返回首页</text>
+  </g>
+
+  <g class="node own" data-id="n-adminhome">
+    <rect x="600" y="270" width="150" height="58"/>
+    <text x="675" y="292" text-anchor="middle">管理后台(店主)</text>
+    <text class="role" x="675" y="308" text-anchor="middle">商品·订单·评价</text>
+    <text class="role" x="675" y="321" text-anchor="middle">账号·运费规则</text>
+  </g>
+
+  <g class="node art" data-id="n-arthome">
+    <rect x="830" y="270" width="150" height="58"/>
+    <text x="905" y="292" text-anchor="middle">管理后台(美甲师)</text>
+    <text class="role" x="905" y="308" text-anchor="middle">仅只读档案</text>
+    <text class="role" x="905" y="321" text-anchor="middle">无改价/上下架</text>
+  </g>
+
+  <g class="node own" data-id="n-archive">
+    <rect x="600" y="380" width="150" height="58"/>
+    <text x="675" y="402" text-anchor="middle">制作档案编辑</text>
+    <text class="role" x="675" y="418" text-anchor="middle">材料·步骤·成本</text>
+    <text class="role" x="675" y="431" text-anchor="middle" style="fill:#c07a10">私有字段</text>
+  </g>
+
+  <g class="node art" data-id="n-archread">
+    <rect x="830" y="380" width="150" height="58"/>
+    <text x="905" y="402" text-anchor="middle">制作档案只读</text>
+    <text class="role" x="905" y="418" text-anchor="middle">材料·步骤可读</text>
+    <text class="role" x="905" y="431" text-anchor="middle" style="fill:#e05555">成本不展示</text>
+  </g>
+
+  <g class="node own" data-id="n-adminorders">
+    <rect x="600" y="490" width="150" height="46"/>
+    <text x="675" y="512" text-anchor="middle">订单管理</text>
+    <text class="role" x="675" y="527" text-anchor="middle">发货·备注</text>
+  </g>
+
+  <g class="node own" data-id="n-accounts">
+    <rect x="600" y="586" width="150" height="46"/>
+    <text x="675" y="608" text-anchor="middle">账号与入口码</text>
+    <text class="role" x="675" y="623" text-anchor="middle">发码·停用·角色</text>
+  </g>
+
+  <g class="node own" data-id="n-review">
+    <rect x="600" y="682" width="150" height="46"/>
+    <text x="675" y="704" text-anchor="middle">评价与运费规则</text>
+    <text class="role" x="675" y="719" text-anchor="middle">隐藏/删除·满2副包邮</text>
+  </g>
+
+  <g class="node no" data-id="n-403">
+    <rect x="830" y="586" width="150" height="46"/>
+    <text x="905" y="608" text-anchor="middle">改价/上下架接口</text>
+    <text class="role" x="905" y="623" text-anchor="middle" style="fill:#e05555">美甲师 403 拒绝</text>
+  </g>
+
+  <!-- 管理端连线 -->
+  <path class="edge" data-from="n-scan" data-to="n-adminhome" d="M720,122 L675,122 L675,270" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-scan" data-to="n-arthome" d="M810,122 L905,122 L905,270" marker-end="url(#arrow)"/>
+  <path class="edge deny" data-from="n-scan" data-to="n-deny" d="M765,122 L775,122 L775,168" marker-end="url(#arrowWarn)"/>
+  <text class="elabel warn" x="790" y="150">无效/停用码</text>
+  <text class="elabel" x="618" y="200" text-anchor="end">owner</text>
+  <text class="elabel" x="930" y="200">artist</text>
+
+  <path class="edge" data-from="n-adminhome" data-to="n-archive" d="M675,328 L675,380" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-arthome" data-to="n-archread" d="M905,328 L905,380" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-adminhome" data-to="n-adminorders" d="M600,310 L560,310 L560,513 L600,513" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-adminhome" data-to="n-accounts" d="M600,300 L540,300 L540,609 L600,609" marker-end="url(#arrow)"/>
+  <path class="edge" data-from="n-adminhome" data-to="n-review" d="M600,320 L520,320 L520,705 L600,705" marker-end="url(#arrow)"/>
+  <path class="edge deny" data-from="n-arthome" data-to="n-403" d="M905,328 L905,380" marker-end="url(#arrowWarn)" opacity="0"/>
+  <path class="edge deny" data-from="n-archread" data-to="n-403" d="M905,438 L905,586" marker-end="url(#arrowWarn)"/>
+  <text class="elabel warn" x="912" y="520">调用被拒 403</text>
+
+  <!-- 私有字段仅管理端下发（橙虚线） -->
+  <path class="edge priv" data-from="n-archive" data-to="n-archread" d="M750,409 L830,409" marker-end="url(#arrowPriv)"/>
+  <text class="elabel priv" x="790" y="402" text-anchor="middle">保存后同步</text>
+
+  <!-- 店主发码回流到扫码 -->
+  <path class="edge dash" data-from="n-accounts" data-to="n-scan" d="M750,609 L1090,609 L1090,96 L850,96" marker-end="url(#arrow)"/>
+  <text class="elabel" x="1098" y="360" writing-mode="tb" text-anchor="middle">发码 / 停用后码失效</text>
+
+</svg>
+</div>
+
+<p class="tip">共 21 个节点 · 用户端 11 / 管理端 10 · 红虚线代表权限边界，橙虚线代表私有数据流</p>
+
+<script>
+/* 悬停高亮：节点 → 关联边 + 对端节点 */
+const svg = document.getElementById("flow");
+const nodes = [...svg.querySelectorAll(".node")];
+const edges = [...svg.querySelectorAll(".edge")];
+
+function idOf(g){ return g.getAttribute("data-id"); }
+
+nodes.forEach(g=>{
+  const id = idOf(g);
+  g.addEventListener("mouseenter", ()=>{
+    svg.classList.add("dim");
+    const related = new Set([id]);
+    edges.forEach(e=>{
+      if(e.getAttribute("data-from")===id || e.getAttribute("data-to")===id){
+        e.style.strokeWidth="2.4";
+        e.style.opacity="1";
+        related.add(e.getAttribute("data-from"));
+        related.add(e.getAttribute("data-to"));
+      } else {
+        e.style.opacity=".12";
+      }
+    });
+    nodes.forEach(n=>{
+      if(related.has(idOf(n))) n.classList.add("hl-node");
+    });
+    g.classList.add("hl-node");
+  });
+  g.addEventListener("mouseleave", ()=>{
+    svg.classList.remove("dim");
+    edges.forEach(e=>{ e.style.strokeWidth=""; e.style.opacity=""; });
+    nodes.forEach(n=>n.classList.remove("hl-node"));
+  });
+});
+</script>
+
+</body>
+</html>

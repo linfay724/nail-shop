@@ -1,41 +1,93 @@
 <template>
   <view class="profile">
-    <view class="header" @click="handleLoginEntry">
-      <image class="avatar" :src="session.session?.avatar || '/static/logo.png'" mode="aspectFill" />
-      <view class="info">
-        <text class="nickname">{{ session.isLoggedIn ? session.session?.nickname : '未登录' }}</text>
-        <text class="tips">{{ session.isLoggedIn ? '欢迎回来' : '点击登录，同步订单与收藏' }}</text>
+    <!-- 头像卡 -->
+    <view class="card row" @click="handleLoginEntry">
+      <image
+        v-if="session.isLoggedIn && session.session?.avatar"
+        class="avatar"
+        :src="session.session.avatar"
+        mode="aspectFill"
+      />
+      <view v-else class="avatar">
+        <text>{{ session.isLoggedIn ? 'U' : '未' }}</text>
+      </view>
+      <view>
+        <view class="name">{{ session.isLoggedIn ? session.session?.nickname : '微信用户' }}</view>
+        <view class="muted">{{ session.isLoggedIn ? '欢迎回来' : '点击授权登录' }}</view>
       </view>
     </view>
 
-    <u-cell-group>
-      <u-cell-item title="我的收藏" :arrow="true" @click="goFavorite" />
-      <u-cell-item title="收货地址" :arrow="true" @click="goAddress" />
-      <u-cell-item title="尺码测量指引" :arrow="true" @click="goSizeGuide" />
-    </u-cell-group>
+    <!-- 订单 / 收藏 / 地址 -->
+    <view class="card">
+      <view class="cell" @click="goOrders">
+        <text>我的订单</text>
+        <text class="r">全部 ›</text>
+      </view>
+      <view class="cell" @click="goFavorite">
+        <text>我的收藏</text>
+        <text class="r">{{ favorite.ids.length }} 款 ›</text>
+      </view>
+      <view class="cell" @click="goAddress">
+        <text>收货地址</text>
+        <text class="r">›</text>
+      </view>
+    </view>
 
-    <button class="contact" open-type="contact">联系客服</button>
+    <!-- 指引 / 协议 / 客服 -->
+    <view class="card">
+      <view class="cell" @click="goSizeGuide">
+        <text>尺码测量指引</text>
+        <text class="r">静态图文 ›</text>
+      </view>
+      <view class="cell" @click="goTerms">
+        <text>用户协议</text>
+        <text class="r">›</text>
+      </view>
+      <view class="cell" @click="goPrivacy">
+        <text>隐私政策</text>
+        <text class="r">›</text>
+      </view>
+      <button class="cell contact" open-type="contact">
+        <text>联系客服</text>
+        <text class="r">›</text>
+      </button>
+    </view>
 
-    <text class="version" @longpress="handleVersionLongPress">v1.0.0</text>
+    <!-- 管理端入口提示 -->
+    <view class="card admin-card">
+      <text class="muted">管理端入口：扫码进入（不在此暴露）</text>
+    </view>
 
     <login-sheet />
   </view>
 </template>
 
 <script setup lang="ts">
+import { onShow } from '@dcloudio/uni-app'
 import { useSessionStore } from '@/stores/session'
-import { useAdminStore } from '@/stores/admin'
+import { useFavoriteStore } from '@/stores/favorite'
 import { requireAuth } from '@/utils/auth-guard'
-import { ADMIN_AUTH_PAGE } from '@/utils/admin-guard'
 import LoginSheet from '@/components/login-sheet.vue'
 
 const session = useSessionStore()
-const admin = useAdminStore()
+const favorite = useFavoriteStore()
+
+onShow(() => {
+  if (session.isLoggedIn) {
+    void favorite.loadIds()
+  }
+})
 
 function handleLoginEntry(): void {
   if (!session.isLoggedIn) {
     requireAuth()
   }
+}
+
+function goOrders(): void {
+  requireAuth(() => {
+    uni.navigateTo({ url: '/pages/order/list' })
+  })
 }
 
 function goFavorite(): void {
@@ -50,74 +102,103 @@ function goSizeGuide(): void {
   uni.navigateTo({ url: '/pages-user/guide/size' })
 }
 
-function handleVersionLongPress(): void {
-  if (admin.isLoggedIn) {
-    uni.navigateTo({ url: '/pages-admin/index/index' })
-    return
-  }
+function goTerms(): void {
+  uni.navigateTo({ url: '/pages-user/legal/terms' })
+}
 
-  uni.navigateTo({ url: ADMIN_AUTH_PAGE })
+function goPrivacy(): void {
+  uni.navigateTo({ url: '/pages-user/legal/privacy' })
 }
 </script>
 
 <style lang="scss" scoped>
 .profile {
   min-height: 100vh;
-  padding: $app-space-base;
+  padding: 28rpx;
   background-color: $app-color-bg;
 }
 
-.header {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  padding: $app-space-lg $app-space-base;
-  background: linear-gradient(120deg, #ffd9e8 0%, #fff3f8 50%, #dcefff 100%);
+.card {
+  margin-bottom: 20rpx;
+  padding: 28rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
   border-radius: $app-radius-lg;
-}
-
-.avatar {
-  width: 120rpx;
-  height: 120rpx;
-  border: 6rpx solid #ffffff;
-  border-radius: 50%;
-  background-color: #fff;
   box-shadow: $app-shadow;
 }
 
-.info {
+.row {
   display: flex;
-  flex-direction: column;
-  margin-left: $app-space-base;
+  align-items: center;
 }
 
-.nickname {
-  font-size: $app-font-lg;
-  color: $app-color-text;
+/* 原型：34px 圆形头像，标签底色 + 莓果字 */
+.avatar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68rpx;
+  height: 68rpx;
+  margin-right: 20rpx;
+  overflow: hidden;
+  font-size: 22rpx;
+  color: $app-color-primary-dark;
+  background-color: $app-color-primary-light;
+  border-radius: 50%;
+}
+
+.name {
+  font-size: 26rpx;
   font-weight: 600;
-}
-
-.tips {
-  margin-top: $app-space-xs;
-  font-size: $app-font-sm;
-  color: $app-color-text-secondary;
-}
-
-.contact {
-  margin-top: $app-space-base;
-  font-size: $app-font-base;
-  line-height: 88rpx;
-  border-radius: $app-radius-base;
-  background-color: #fff;
   color: $app-color-text;
 }
 
-.version {
-  display: block;
-  margin-top: $app-space-lg;
+.muted {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: $app-color-text-muted;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 0;
+  font-size: 24rpx;
+  color: $app-color-text;
+  border-bottom: 1rpx solid $app-color-border-soft;
+}
+
+.cell:last-child {
+  border-bottom: none;
+}
+
+.r {
+  font-size: 22rpx;
+  color: $app-color-text-muted;
+}
+
+/* 联系客服保持 cell 形态（open-type 按钮需要重置默认样式） */
+.contact {
+  width: 100%;
+  margin: 0;
+  font-weight: 400;
+  line-height: inherit;
+  text-align: left;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.contact::after {
+  border: none;
+}
+
+/* 管理端提示：虚线卡 */
+.admin-card {
+  padding: 24rpx;
   text-align: center;
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
+  border: 1rpx dashed $app-color-border;
+  box-shadow: none;
 }
 </style>

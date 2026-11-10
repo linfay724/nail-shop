@@ -1,6 +1,16 @@
 <template>
   <view class="order-list">
-    <u-tabs :list="tabs" :current="tabIndex" @change="onTabChange" />
+    <view class="cat">
+      <text
+        v-for="(item, index) in tabs"
+        :key="item.name"
+        class="cat-item"
+        :class="{ active: tabIndex === index }"
+        @click="onTabChange(index)"
+      >
+        {{ item.name }}
+      </text>
+    </view>
 
     <view v-if="loading" class="hint">加载中…</view>
     <u-empty v-else-if="orders.length === 0" mode="order" text="暂无订单" />
@@ -8,21 +18,23 @@
     <view v-else class="list">
       <view v-for="order in orders" :key="order.id" class="order" @click="openDetail(order.id)">
         <view class="head">
-          <text class="no">{{ order.id }}</text>
-          <text class="status">{{ ORDER_STATUS_LABELS[order.status] }}</text>
+          <text class="no">订单 {{ order.id }}</text>
+          <text class="status" :class="{ gray: order.status === 'cancelled' }">
+            {{ ORDER_STATUS_LABELS[order.status] }}
+          </text>
         </view>
         <view class="items">
           <view v-for="item in order.items" :key="item.skuId" class="item">
             <image class="cover" :src="item.cover" mode="aspectFill" />
             <view class="item-info">
               <text class="name">{{ item.name }}</text>
-              <text class="spec">{{ item.size }} · {{ item.pieceCount }} 片 × {{ item.quantity }}</text>
+              <text class="spec">{{ specOf(item) }} × {{ item.quantity }}</text>
             </view>
           </view>
         </view>
         <view class="foot">
-          <text class="amount">实付 {{ formatPrice(order.amount) }}</text>
-          <text v-if="order.afterSale" class="aftersale">售后处理中</text>
+          <text class="foot-label">含运费 {{ formatPrice(order.shippingFee) }}</text>
+          <text class="amount">{{ formatPrice(order.amount) }}</text>
         </view>
       </view>
     </view>
@@ -34,7 +46,7 @@ import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { orderApi } from '@/api/order'
 import { toastError } from '@/api/transport'
-import type { PublicOrder } from '@/api/contract'
+import { SHAPE_LABELS, SIZE_LABELS, type OrderItem, type PublicOrder } from '@/api/contract'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_TABS } from '@/utils/constants'
 import { formatPrice } from '@/utils/price'
 import { getStorage, removeStorage } from '@/utils/storage'
@@ -43,6 +55,13 @@ const tabs = ORDER_STATUS_TABS.map((item) => ({ name: item.name }))
 const tabIndex = ref(0)
 const orders = ref<PublicOrder[]>([])
 const loading = ref(false)
+
+function specOf(item: OrderItem): string {
+  if (item.isAccessory || !item.size || !item.shape) {
+    return '工具包'
+  }
+  return `${SIZE_LABELS[item.size]} / ${SHAPE_LABELS[item.shape]} · ${item.unit}`
+}
 
 async function load(): Promise<void> {
   loading.value = true
@@ -82,22 +101,47 @@ onShow(() => {
   background-color: $app-color-bg;
 }
 
+.cat {
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 28rpx 28rpx 0;
+}
+
+.cat-item {
+  flex: 0 0 auto;
+  margin-right: 14rpx;
+  padding: 10rpx 22rpx;
+  font-size: 22rpx;
+  color: $app-color-text-secondary;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-pill;
+}
+
+.active {
+  color: $app-color-white;
+  background-color: $app-color-primary-dark;
+  border-color: $app-color-primary-dark;
+}
+
 .hint {
   padding: $app-space-lg 0;
   text-align: center;
   font-size: $app-font-sm;
-  color: $app-color-text-secondary;
+  color: $app-color-text-muted;
 }
 
 .list {
-  padding: $app-space-base;
+  padding: 20rpx 28rpx;
 }
 
 .order {
-  margin-bottom: $app-space-sm;
-  padding: $app-space-sm;
-  background-color: #fff;
-  border-radius: $app-radius-base;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
 }
 
 .head {
@@ -107,61 +151,74 @@ onShow(() => {
 }
 
 .no {
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: $app-color-text;
 }
 
 .status {
-  font-size: $app-font-sm;
-  color: $app-color-primary;
+  padding: 4rpx 14rpx;
+  font-size: 18rpx;
+  color: $app-color-primary-dark;
+  background-color: $app-color-primary-light;
+  border-radius: $app-radius-pill;
+}
+
+.gray {
+  color: $app-color-text-muted;
+  background-color: #f4f1f0;
 }
 
 .items {
-  margin: $app-space-sm 0;
+  margin: 16rpx 0;
 }
 
 .item {
   display: flex;
   align-items: center;
-  margin-bottom: $app-space-xs;
+  margin-bottom: 12rpx;
 }
 
 .cover {
   width: 110rpx;
   height: 110rpx;
-  border-radius: $app-radius-sm;
+  border-radius: 20rpx;
+  background-color: $app-color-input-bg;
 }
 
 .item-info {
   display: flex;
   flex-direction: column;
-  margin-left: $app-space-sm;
+  margin-left: 16rpx;
 }
 
 .name {
-  font-size: $app-font-sm;
+  font-size: 24rpx;
   color: $app-color-text;
 }
 
 .spec {
   margin-top: 4rpx;
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
+  font-size: 18rpx;
+  color: $app-color-text-muted;
 }
 
 .foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-top: 12rpx;
+  border-top: 1rpx solid $app-color-border-soft;
+}
+
+.foot-label {
+  font-size: 18rpx;
+  color: $app-color-text-muted;
 }
 
 .amount {
-  font-size: $app-font-base;
-  color: $app-color-text;
-}
-
-.aftersale {
-  font-size: $app-font-xs;
-  color: #dd524d;
+  font-size: 26rpx;
+  color: $app-color-primary-dark;
+  font-weight: 700;
 }
 </style>

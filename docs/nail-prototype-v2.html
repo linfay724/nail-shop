@@ -1,0 +1,901 @@
+<!--
+CSS 变量清单：
+品牌色：--primary、--primary-hover、--berry、--admin-accent
+页面/组件背景：--page-bg、--surface-bg、--admin-bg、--admin-glass、--white、--input-bg、--admin-soft
+文字/边框：--text-primary、--text-secondary、--text-muted、--border、--border-soft、--phone-frame
+状态色：--success、--success-bg、--success-soft、--warning、--warning-text、--warning-bg、--warning-bg-soft、--danger-bg、--disabled-bg
+占位图色：--tag-bg、--thumb-blush-1、--thumb-blush-2、--thumb-lilac、--thumb-lavender-1、--thumb-lavender-2、--thumb-warm-1
+阴影：--card-shadow、--phone-shadow；导航背景：--nav-glass；灰色标签背景：--tag-gray-bg
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>穿戴甲小程序 · 交互原型 v1.1</title>
+<style>
+  :root {
+    /* 品牌与基础色 */
+    --primary: #E8B4B8;
+    --primary-hover: #D49A9E;
+    --berry: #8C3B4A;
+    --admin-accent: #7C6CF0;
+
+    /* 页面与组件背景 */
+    --page-bg: #FAF7F5;
+    --surface-bg: #FAF7F5;
+    --admin-bg: #F5F4F3;
+    --admin-glass: rgba(245, 244, 243, .88);
+    --nav-glass: rgba(250, 247, 245, .90);
+    --tag-gray-bg: #F4F1F0;
+    --white: #FFFFFF;
+    --input-bg: #F7F3F2;
+    --admin-soft: #F0EDFF;
+
+    /* 文字与边框 */
+    --text-primary: #3A3335;
+    --text-secondary: #756B6D;
+    --text-muted: #9A8F91;
+    --border: #F0EAE8;
+    --border-soft: #F5F0EE;
+    --phone-frame: #3A3335;
+
+    /* 状态色 */
+    --success: #5B8C6E;
+    --success-bg: #EEF5F0;
+    --success-soft: #F4F8F5;
+    --warning: #C08A3E;
+    --warning-text: #9C713A;
+    --warning-bg: #FBF4E9;
+    --warning-bg-soft: #FDF8F0;
+    --danger-bg: #FAEEEE;
+    --disabled-bg: #D8D2D1;
+
+    /* 标签与图片占位色 */
+    --tag-bg: #FDF3F4;
+    --thumb-blush-1: #F4DDE0;
+    --thumb-blush-2: #EBCFD2;
+    --thumb-lilac: #E8DFEB;
+    --thumb-lavender-1: #E2E5F0;
+    --thumb-lavender-2: #D6D9E9;
+    --thumb-warm-1: #F2E4DC;
+
+    /* 阴影 */
+    --card-shadow: 0 2px 8px rgba(140, 59, 74, .06);
+    --phone-shadow: 0 12px 30px rgba(58, 51, 53, .12);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:-apple-system, "PingFang SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+    background:var(--page-bg);
+    color:var(--text-primary);
+    padding:24px 14px 40px;
+    font-size:12px;
+    font-weight:400;
+    line-height:1.6;
+  }
+  h1 { text-align:center; font-size:20px; font-weight:600; margin-bottom:4px; color:var(--text-primary); }
+  .sub { text-align:center; color:var(--text-muted); font-size:11px; margin-bottom:18px; }
+
+  /* 顶部导航 */
+  .nav {
+    position:sticky; top:0; z-index:50;
+    background:var(--nav-glass);
+    backdrop-filter:blur(10px);
+    padding:8px 0 12px; margin-bottom:16px;
+  }
+  .nav-inner { max-width:1240px; margin:0 auto; display:flex; gap:7px; flex-wrap:wrap; justify-content:center; }
+  .nav button {
+    font-family:inherit;
+    font-size:11px; font-weight:500;
+    padding:6px 12px; border-radius:999px;
+    border:1px solid var(--border);
+    background:var(--white); color:var(--text-secondary);
+    cursor:pointer; transition:.18s ease;
+  }
+  .nav button:hover { border-color:var(--primary-hover); color:var(--berry); }
+  .nav button.on { background:var(--berry); color:var(--white); border-color:var(--berry); }
+  .nav button.admin.on { background:var(--admin-accent); border-color:var(--admin-accent); }
+
+  .stage { max-width:1240px; margin:0 auto; display:flex; gap:30px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+
+  /* 手机外框：尺寸与布局保持原样 */
+  .phone {
+    width:300px; height:600px; background:var(--white); border-radius:34px;
+    border:9px solid var(--phone-frame);
+    box-shadow:var(--phone-shadow);
+    position:relative; overflow:hidden; display:flex; flex-direction:column; flex:0 0 auto;
+  }
+  .statusbar {
+    height:26px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; font-size:10px; color:var(--text-primary);
+    flex:0 0 auto; background:var(--white);
+  }
+  .navbar {
+    height:40px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; font-weight:600; color:var(--text-primary);
+    border-bottom:1px solid var(--border); flex:0 0 auto;
+    background:var(--white); position:relative;
+  }
+  .navbar .back { position:absolute; left:14px; font-size:20px; color:var(--text-secondary); cursor:pointer; padding:0 4px; }
+  .body { flex:1; overflow-y:auto; background:var(--surface-bg); }
+  .body::-webkit-scrollbar { width:0; }
+  body:has(.nav button.admin.on) .phone .body { background:var(--admin-bg); }
+
+  .pad { padding:14px; }
+  .card {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:14px; padding:14px; margin-bottom:10px;
+    box-shadow:var(--card-shadow);
+  }
+  .row { display:flex; align-items:center; }
+  .between { justify-content:space-between; }
+  .thumb {
+    width:100%; height:130px; border-radius:10px;
+    background:linear-gradient(135deg,var(--thumb-blush-1),var(--thumb-lilac));
+    display:flex; align-items:center; justify-content:center;
+    color:var(--berry); font-size:11px; margin-bottom:8px;
+  }
+  .thumb.sm { width:60px; height:60px; margin:0 10px 0 0; flex:0 0 auto; font-size:9px; }
+  .tag {
+    font-size:10px; padding:3px 9px; border-radius:999px;
+    background:var(--tag-bg); color:var(--berry); margin-right:5px;
+  }
+  .tag.gray { background:var(--tag-gray-bg); color:var(--text-muted); }
+  .tag.click { cursor:pointer; }
+  .price { color:var(--berry); font-weight:700; font-size:15px; }
+  .price small { font-size:10px; font-weight:400; color:var(--text-muted); }
+  .btn {
+    display:block; text-align:center; background:var(--berry); color:var(--white);
+    border-radius:999px; padding:10px 14px; font-size:13px; font-weight:600;
+    margin-top:8px; cursor:pointer; transition:.18s ease;
+  }
+  .btn:hover { opacity:.9; }
+  .btn.outline { background:var(--white); color:var(--berry); border:1px solid var(--primary); }
+  .btn.admin { background:var(--admin-accent); }
+  .btn.warn { background:var(--warning); }
+  .btn.dis { background:var(--disabled-bg); color:var(--white); cursor:not-allowed; }
+  .input {
+    background:var(--input-bg); border:1px solid var(--border);
+    border-radius:10px; padding:9px 10px; font-size:12px;
+    color:var(--text-muted); margin-bottom:8px;
+  }
+  .input.filled { color:var(--text-primary); }
+  .searchbar {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:999px; padding:9px 12px; font-size:12px;
+    color:var(--text-muted); display:flex; align-items:center;
+  }
+  .cat { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .cat.cat-scroll {
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    overflow-y:hidden;
+    white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    touch-action:pan-x;
+    padding-bottom:3px;
+  }
+  .cat.cat-scroll::-webkit-scrollbar { display:none; }
+  .cat.cat-scroll span { flex:0 0 auto; }
+  .cat span {
+    font-size:11px; background:var(--white); border:1px solid var(--border);
+    border-radius:999px; padding:5px 11px; color:var(--text-secondary); cursor:pointer;
+  }
+  .cat span.active { background:var(--berry); color:var(--white); border-color:var(--berry); }
+  .tabbar { height:48px; background:var(--white); border-top:1px solid var(--border); display:flex; flex:0 0 auto; }
+  .tabbar div { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:9px; color:var(--text-muted); cursor:pointer; }
+  .tabbar div.on { color:var(--berry); }
+  .tabbar .ico { font-size:15px; margin-bottom:1px; }
+
+  /* 首页专属展示：不增加搜索框或分类入口 */
+  .home-page { padding:12px 13px 16px; }
+  .home-intro { padding:1px 2px 11px; }
+  .home-kicker { color:var(--berry); font-size:8px; letter-spacing:1.5px; font-weight:600; }
+  .home-greeting { margin-top:3px; font-family:"Songti SC","Noto Serif CJK SC",serif; font-size:19px; line-height:1.35; letter-spacing:.5px; color:var(--text-primary); }
+  .home-subtitle { margin-top:3px; color:var(--text-muted); font-size:10px; letter-spacing:.4px; }
+  .home-hero {
+    height:142px; position:relative; overflow:hidden; border-radius:16px; cursor:pointer;
+    background:linear-gradient(112deg,#F4E3E1 0%,#EBD5D7 53%,#DCCBD9 100%);
+    box-shadow:0 5px 14px rgba(140,59,74,.09);
+  }
+  .home-hero-copy { position:relative; z-index:2; padding:17px 0 0 15px; }
+  .home-hero-label { font-size:7px; letter-spacing:1.4px; color:#986B70; font-weight:600; }
+  .home-hero-title { margin-top:5px; font-family:"Songti SC","Noto Serif CJK SC",serif; font-size:20px; color:#633E47; letter-spacing:1px; }
+  .home-hero-desc { margin-top:2px; font-size:9px; color:#85666B; }
+  .home-hero-link { display:inline-block; margin-top:10px; padding:4px 9px; border:1px solid rgba(140,59,74,.28); border-radius:999px; color:#754650; font-size:8px; }
+  .home-hero-link b { margin-left:4px; font-size:11px; }
+  .home-hero-art { position:absolute; right:1px; top:0; width:132px; height:142px; }
+  .home-hero-art:before { content:""; position:absolute; width:112px; height:112px; right:4px; top:16px; border-radius:50%; background:rgba(255,255,255,.28); }
+  .home-hero-art:after { content:""; position:absolute; width:72px; height:72px; right:24px; top:36px; border-radius:50%; border:1px solid rgba(255,255,255,.5); }
+  .home-hero-art i, .home-product-art i { position:absolute; display:block; width:15px; height:43px; border-radius:11px 11px 8px 8px; border:1px solid rgba(255,255,255,.82); background:linear-gradient(145deg,#FFF9F3 0%,#E8C5C3 68%,#C98F98 100%); box-shadow:2px 4px 7px rgba(103,63,70,.16); transform:rotate(-19deg); }
+  .home-hero-art i:nth-child(1) { right:79px; top:47px; transform:rotate(-30deg); }
+  .home-hero-art i:nth-child(2) { right:57px; top:33px; transform:rotate(-12deg); }
+  .home-hero-art i:nth-child(3) { right:35px; top:37px; transform:rotate(5deg); }
+  .home-hero-art i:nth-child(4) { right:17px; top:53px; transform:rotate(20deg); }
+  .home-hero-art i:nth-child(5) { right:43px; top:75px; height:35px; transform:rotate(3deg); }
+  .home-hero-no { position:absolute; right:12px; bottom:8px; z-index:2; color:rgba(99,62,71,.62); font-size:7px; letter-spacing:1px; }
+  .home-section-head { display:flex; align-items:flex-end; justify-content:space-between; margin:15px 1px 8px; }
+  .home-section-head .section-h { margin:0 0 2px; font-size:13px; }
+  .home-more { color:var(--text-muted); font-size:9px; cursor:pointer; padding-bottom:2px; }
+  .home-more b { color:var(--berry); font-size:11px; margin-left:2px; }
+  .home-product-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+  .home-product-card { min-width:0; overflow:hidden; background:var(--white); border:1px solid var(--border); border-radius:13px; box-shadow:var(--card-shadow); cursor:pointer; }
+  .home-product-art { height:104px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .home-product-art:before { content:""; position:absolute; width:82px; height:82px; border-radius:50%; background:rgba(255,255,255,.35); }
+  .home-product-art.art-cream { background:linear-gradient(145deg,#F4E5DF,#E7C9C7 60%,#D9B5B7); }
+  .home-product-art.art-lilac { background:linear-gradient(145deg,#EAE6EF,#D9D6E7 58%,#C7C5D9); }
+  .home-product-art i { width:12px; height:38px; z-index:1; }
+  .home-product-art i:nth-of-type(1) { margin:0 0 0 -2px; transform:rotate(-23deg) translateY(3px); }
+  .home-product-art i:nth-of-type(2) { margin-left:-3px; transform:rotate(-11deg) translateY(-4px); }
+  .home-product-art i:nth-of-type(3) { margin-left:-3px; transform:rotate(2deg) translateY(-7px); }
+  .home-product-art i:nth-of-type(4) { margin-left:-3px; transform:rotate(15deg) translateY(-3px); }
+  .home-product-art i:nth-of-type(5) { margin-left:-3px; transform:rotate(27deg) translateY(4px); }
+  .art-lilac i { background:linear-gradient(145deg,#FFFDFE,#DAD8EA 65%,#A8A6C5); }
+  .art-chip { position:absolute; z-index:2; top:8px; left:8px; padding:2px 5px; border-radius:999px; background:rgba(255,255,255,.72); color:var(--berry); font-size:7px; letter-spacing:.7px; }
+  .home-product-info { padding:8px 8px 9px; }
+  .home-product-name { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:10px; font-weight:600; color:var(--text-primary); }
+  .home-product-tags { margin-top:5px; white-space:nowrap; }
+  .home-product-tags .tag { display:inline-block; margin-right:3px; padding:2px 6px; font-size:8px; }
+  .home-product-meta { margin-top:6px; gap:2px; }
+  .home-product-meta .price { font-size:13px; white-space:nowrap; }
+  .home-product-meta .price small { font-size:8px; }
+  .home-product-meta .muted { font-size:8px; white-space:nowrap; }
+  .home-service { margin-top:12px; padding:9px 8px 8px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,.72); text-align:center; }
+  .home-service-title { color:var(--text-secondary); font-family:"Songti SC","Noto Serif CJK SC",serif; font-size:9px; letter-spacing:.4px; }
+  .home-service-items { display:flex; justify-content:space-around; margin-top:6px; color:var(--text-muted); font-size:8px; }
+  .home-service-items b { color:var(--primary-hover); margin-right:3px; font-size:10px; }
+
+  .section-h { font-size:13px; font-weight:600; margin:2px 0 8px; color:var(--text-primary); }
+  .muted { color:var(--text-muted); font-size:11px; }
+  .divider { height:1px; background:var(--border); margin:10px 0; }
+  .avatar {
+    width:34px; height:34px; border-radius:50%; background:var(--tag-bg);
+    display:flex; align-items:center; justify-content:center; font-size:11px;
+    color:var(--berry); margin-right:10px; flex:0 0 auto;
+  }
+  .cell {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 0; font-size:12px; border-bottom:1px solid var(--border-soft); cursor:pointer;
+  }
+  .cell:last-child { border-bottom:none; }
+  .cell .r { color:var(--text-muted); font-size:11px; }
+  .badge { font-size:9px; padding:2px 7px; border-radius:999px; margin-left:5px; }
+  .badge.pub { background:var(--success-bg); color:var(--success); }
+  .badge.own { background:var(--warning-bg); color:var(--warning); }
+  .badge.art { background:var(--admin-soft); color:var(--admin-accent); }
+  .badge.no { background:var(--danger-bg); color:var(--berry); }
+  .sku { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .sku b {
+    font-size:11px; font-weight:500; border:1px solid var(--border);
+    border-radius:10px; padding:5px 10px; color:var(--text-secondary); cursor:pointer;
+  }
+  .sku b.on { border-color:var(--primary-hover); color:var(--berry); background:var(--tag-bg); }
+  .sku b.other { border-style:dashed; color:var(--warning); }
+  .note {
+    background:var(--warning-bg-soft); border:1px dashed var(--warning);
+    border-radius:10px; padding:9px; font-size:11px;
+    color:var(--warning-text); margin-top:8px;
+  }
+  .footerbar {
+    background:var(--white); padding:10px 12px; display:flex; gap:8px;
+    align-items:center; flex:0 0 auto; border-top:1px solid var(--border);
+  }
+  .footerbar .btn { flex:1; margin-top:0; }
+  .stat { display:flex; gap:8px; }
+  .stat div {
+    flex:1; background:var(--white); border:1px solid var(--border);
+    border-radius:12px; padding:10px 8px; text-align:center;
+  }
+  .stat b { display:block; font-size:16px; color:var(--text-primary); font-weight:700; }
+  .stat small { font-size:9px; color:var(--text-muted); }
+  .stepitem { display:flex; margin-bottom:10px; }
+  .stepno {
+    width:20px; height:20px; border-radius:50%; background:var(--admin-accent);
+    color:var(--white); font-size:10px; display:flex; align-items:center;
+    justify-content:center; margin-right:8px; flex:0 0 auto;
+  }
+  .stepimg { display:flex; gap:4px; margin-top:5px; }
+  .stepimg i {
+    width:40px; height:40px; background:var(--input-bg); border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:8px;
+    color:var(--text-muted); font-style:normal;
+  }
+  .stepimg i.vid { background:var(--admin-soft); color:var(--admin-accent); }
+  .perm-note {
+    font-size:9px; color:var(--berry); background:var(--danger-bg);
+    border-radius:8px; padding:6px 8px; margin-top:6px; line-height:1.5;
+  }
+  .role-banner {
+    background:var(--admin-soft); color:var(--admin-accent); font-size:10px;
+    padding:7px 10px; border-radius:10px; margin-bottom:8px;
+  }
+  .checkbox {
+    width:16px; height:16px; border:1.5px solid var(--primary-hover);
+    border-radius:5px; display:inline-flex; align-items:center; justify-content:center;
+    font-size:10px; color:var(--berry); margin-right:9px; flex:0 0 auto;
+  }
+  .stepper { display:flex; align-items:center; gap:0; }
+  .stepper span {
+    width:22px; height:22px; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-size:13px;
+    color:var(--text-secondary); cursor:pointer; border-radius:7px;
+  }
+  .stepper em { font-style:normal; padding:0 9px; font-size:12px; }
+  .timeline { position:relative; padding-left:16px; }
+  .timeline::before { content:""; position:absolute; left:5px; top:4px; bottom:4px; width:2px; background:var(--border); }
+  .tl-item { position:relative; margin-bottom:12px; font-size:11px; }
+  .tl-item::before { content:""; position:absolute; left:-15px; top:3px; width:8px; height:8px; border-radius:50%; background:var(--success); }
+  .tl-item.pending::before { background:var(--disabled-bg); }
+  .tl-item b { display:block; font-size:11px; color:var(--text-primary); }
+  .radio { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--disabled-bg); margin-right:9px; flex:0 0 auto; }
+  .radio.on { border:5px solid var(--berry); }
+
+  @media (max-width:640px) {
+    body { padding:12px 10px 28px; }
+    .stage { gap:18px; }
+    .nav { margin-bottom:12px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>穿戴甲售卖与管理小程序 · 交互原型</h1>
+<p class="sub">v1.1 ｜ 点击屏内元素或顶部导航可跳转 ｜ 私有字段均已标注可见性</p>
+
+<!-- ============ 顶部导航 ============ -->
+<div class="nav">
+  <div class="nav-inner" id="navBar"></div>
+</div>
+
+<!-- ============ 舞台 ============ -->
+<div class="stage" id="stage"></div>
+
+<script>
+/* ================== 页面定义 ================== */
+const PAGES = {
+
+  /* ---------- 用户端 ---------- */
+  home: {
+    title:"首页", role:"用户端",
+    html:`
+      <div class="pad home-page">
+        <div class="home-intro">
+          <div class="home-kicker">PETIT NAIL STUDIO · 指尖美学</div>
+          <div class="home-greeting">把精致，戴在指尖。</div>
+          <div class="home-subtitle">为日常挑一份温柔的小心意</div>
+        </div>
+
+        <div class="home-hero" onclick="go('detail')">
+          <div class="home-hero-copy">
+            <span class="home-hero-label">NEW COLLECTION</span>
+            <div class="home-hero-title">春日轻法式</div>
+            <div class="home-hero-desc">温柔配色 · 日常百搭</div>
+            <span class="home-hero-link">发现本季新款 <b>→</b></span>
+          </div>
+          <div class="home-hero-art" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <span class="home-hero-no">01 / 03</span>
+        </div>
+
+        <div class="home-section-head">
+          <div>
+            <div class="section-h">本周人气精选</div>
+            <div class="muted">大家都喜欢的温柔款式</div>
+          </div>
+          <span class="home-more" onclick="go('list')">全部款式 <b>→</b></span>
+        </div>
+
+        <div class="home-product-grid">
+          <div class="home-product-card" onclick="go('detail')">
+            <div class="home-product-art art-cream">
+              <span class="art-chip">BEST</span><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="home-product-info">
+              <div class="home-product-name">奶油法式猫眼</div>
+              <div class="home-product-tags"><span class="tag">热卖</span><span class="tag gray">短圆</span></div>
+              <div class="row between home-product-meta">
+                <span class="price">¥68<small>/副</small></span><span class="muted">已售320</span>
+              </div>
+            </div>
+          </div>
+          <div class="home-product-card" onclick="go('detail')">
+            <div class="home-product-art art-lilac">
+              <span class="art-chip">NEW</span><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div class="home-product-info">
+              <div class="home-product-name">碎钻渐变长梯</div>
+              <div class="home-product-tags"><span class="tag">新品</span><span class="tag gray">长梯</span></div>
+              <div class="row between home-product-meta">
+                <span class="price">¥88<small>/副</small></span><span class="muted">已售96</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-service">
+          <div class="home-service-title">一点点用心，让美更贴近日常</div>
+          <div class="home-service-items">
+            <span><b>✦</b> 精致手作</span>
+            <span><b>♡</b> 温柔设计</span>
+            <span><b>⌁</b> 轻松佩戴</span>
+          </div>
+        </div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:0
+  },
+
+  list: {
+    title:"搜索结果", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="searchbar">🔍 猫眼</div>
+        <div class="cat cat-scroll" style="margin-top:8px">
+          <span class="active">综合</span><span>销量</span><span>上新</span><span>价格</span>
+        </div>
+        <div class="card" style="margin-top:10px" onclick="go('detail')">
+          <div class="row"><div class="thumb sm">图</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div style="margin-top:4px"><span class="tag">热卖</span></div>
+              <div class="row between" style="margin-top:6px"><span class="price">¥68<small>/副</small></span><span class="muted">已售320</span></div>
+            </div></div>
+        </div>
+        <div class="card" onclick="go('detail')">
+          <div class="row"><div class="thumb sm" style="background:linear-gradient(135deg,var(--thumb-warm-1),var(--thumb-blush-2))">图</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:600">焦糖猫眼短圆</div>
+              <div style="margin-top:4px"><span class="tag gray">短圆</span></div>
+              <div class="row between" style="margin-top:6px"><span class="price">¥58<small>/副</small></span><span class="muted">已售210</span></div>
+            </div></div>
+        </div>
+        <div class="muted" style="text-align:center;padding:10px">— 上拉加载更多 · 分页 —</div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:1
+  },
+
+  detail: {
+    title:"商品详情", role:"用户端",
+    html:`
+      <div class="thumb" style="border-radius:0;height:150px;margin:0">图片轮播 + ▶ 视频</div>
+      <div class="pad">
+        <div class="row between"><span class="price" style="font-size:19px">¥68<small>/副</small></span><span class="muted">已售320</span></div>
+        <div style="font-size:14px;font-weight:600;margin:6px 0">奶油法式猫眼</div>
+        <div class="muted">一副通常 10/12 片 · 含工具包可选</div>
+        <div class="divider"></div>
+        <div class="section-h">尺码</div>
+        <div class="sku"><b>S</b><b class="on">M</b><b>L</b><b class="other" onclick="go('order')">其他</b></div>
+        <div class="section-h" style="margin-top:10px">甲型</div>
+        <div class="sku"><b class="on">短圆</b><b>中长</b><b>长梯</b><b class="other" onclick="go('order')">其他</b></div>
+        <div class="note">选择「其他」时，下单页需填写定制备注</div>
+        <div class="divider"></div>
+        <div class="section-h">用户评价 <span class="muted">（先发先显，管理员可隐藏）</span></div>
+        <div class="card" style="margin:0">
+          <div class="row"><div class="avatar">U</div><div style="font-size:11px">★★★★★ 很好看，贴合！<br><span class="muted">图片 / 视频晒单</span></div></div>
+        </div>
+      </div>`,
+    footer:`<div class="btn outline" onclick="go('user')">收藏</div>
+            <div class="btn outline" onclick="go('cart')">加购</div>
+            <div class="btn" onclick="go('order')">立即购买</div>`
+  },
+
+  cart: {
+    title:"购物车", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="row between" style="margin-bottom:10px">
+          <span class="muted">共 3 件</span>
+          <span class="muted" style="color:var(--berry)">管理</span>
+        </div>
+        <div class="card">
+          <div class="row">
+            <span class="checkbox">✓</span>
+            <div class="thumb sm">图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">尺码 M · 甲型 短圆</div>
+              <div class="row between" style="margin-top:6px">
+                <span class="price" style="font-size:13px">¥68</span>
+                <div class="stepper"><span>−</span><em>1</em><span>＋</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <span class="checkbox">✓</span>
+            <div class="thumb sm" style="background:linear-gradient(135deg,var(--thumb-lavender-1),var(--thumb-lavender-2))">图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">碎钻渐变长梯</div>
+              <div class="muted" style="margin-top:3px">尺码 L · 甲型 长梯 · <span style="color:var(--warning)">其他</span></div>
+              <div class="row between" style="margin-top:6px">
+                <span class="price" style="font-size:13px">¥88</span>
+                <div class="stepper"><span>−</span><em>2</em><span>＋</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="note">已选商品共 3 副，满足满 2 副包邮</div>
+      </div>`,
+    footer:`<span class="muted">合计 <span class="price">¥244</span></span>
+            <div class="btn" style="flex:0 0 130px" onclick="go('order')">去结算(3)</div>`,
+    tab:["home","category","cart","user"], tabOn:2
+  },
+
+  order: {
+    title:"确认订单", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="card">
+          <div style="font-size:12px;font-weight:600">📍 收货地址</div>
+          <div class="muted" style="margin-top:5px">张三 138****0000 · 福建省福州市…</div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <div class="thumb sm">图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">尺码 M · 甲型 短圆 × 2 副</div>
+              <div class="row between" style="margin-top:5px">
+                <span class="price" style="font-size:13px">¥136</span><span class="muted">×2</span>
+              </div>
+            </div>
+          </div>
+          <div class="note">已选「其他」规格，请填写定制备注（必填提示）</div>
+          <div class="input" style="margin-top:6px">定制备注：如甲床尺寸、图案微调…</div>
+        </div>
+        <div class="card">
+          <div class="cell">商品金额 <span class="r">¥136</span></div>
+          <div class="cell">运费 <span class="r" style="color:var(--berry)">满 2 副包邮 ¥0</span></div>
+          <div class="cell">合计 <span class="price" style="font-size:14px">¥136</span></div>
+        </div>
+      </div>`,
+    footer:`<span class="muted">合计 <span class="price">¥136</span></span>
+            <div class="btn" style="flex:0 0 120px" onclick="go('orders')">微信支付</div>`
+  },
+
+  orders: {
+    title:"我的订单", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="cat"><span class="active">全部</span><span>待付款</span><span>待发货</span><span>待收货</span><span>已完成</span></div>
+        <div class="card" style="margin-top:10px" onclick="go('orderDetail')">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261109-01</span><span class="tag">待发货</span></div>
+          <div class="row" style="margin-top:8px"><div class="thumb sm">图</div>
+            <div style="flex:1"><div style="font-size:12px">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">M · 短圆 ×2 副</div></div>
+            <span class="price" style="font-size:13px">¥136</span>
+          </div>
+        </div>
+        <div class="card" onclick="go('orderDetail')">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261108-12</span><span class="tag gray">已完成</span></div>
+          <div class="row" style="margin-top:8px"><div class="thumb sm" style="background:linear-gradient(135deg,var(--thumb-lavender-1),var(--thumb-lavender-2))">图</div>
+            <div style="flex:1"><div style="font-size:12px">碎钻渐变长梯</div>
+              <div class="muted" style="margin-top:3px">L · 长梯 ×1 副 · 运费 ¥8</div></div>
+            <span class="price" style="font-size:13px">¥96</span>
+          </div>
+        </div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:3
+  },
+
+  orderDetail: {
+    title:"订单详情", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="card" style="background:var(--success-bg)">
+          <div style="font-size:13px;font-weight:600;color:var(--berry)">待发货</div>
+          <div class="muted" style="margin-top:4px">商家正在备货，预计 48 小时内发出</div>
+        </div>
+        <div class="card">
+          <div class="row"><div class="thumb sm">图</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">尺码 M · 甲型 短圆 × 2 副</div>
+              <div class="row between" style="margin-top:5px"><span class="price" style="font-size:13px">¥136</span></div>
+            </div></div>
+          <div class="note">定制备注：甲床偏宽，请按备注调整</div>
+        </div>
+        <div class="card">
+          <div class="cell">商品金额 <span class="r">¥136</span></div>
+          <div class="cell">运费 <span class="r" style="color:var(--berry)">满2副包邮 ¥0</span></div>
+          <div class="cell">实付款 <span class="price" style="font-size:14px">¥136</span></div>
+        </div>
+        <div class="card">
+          <div class="section-h">物流信息</div>
+          <div class="timeline">
+            <div class="tl-item pending"><b>暂无物流信息</b><span class="muted">发货后更新</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cell" onclick="go('afterSale')">申请售后 / 联系客服协商 <span class="r">›</span></div>
+          <div class="cell">复制订单号 <span class="r">›</span></div>
+        </div>
+      </div>`,
+    footer:`<div class="btn outline" onclick="go('afterSale')">联系客服</div>
+            <div class="btn" onclick="go('orders')">确认收货</div>`
+  },
+
+  afterSale: {
+    title:"售后协商", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="role-banner" style="background:var(--warning-bg);color:var(--warning-text)">MVP 仅提供「联系客服协商」，不做线上退款流程</div>
+        <div class="card">
+          <div class="section-h">选择问题类型</div>
+          <div class="cell"><span class="radio on"></span>尺寸不合适</div>
+          <div class="cell"><span class="radio"></span>商品破损 / 瑕疵</div>
+          <div class="cell"><span class="radio"></span>与描述不符</div>
+          <div class="cell"><span class="radio"></span>其他问题</div>
+        </div>
+        <div class="card">
+          <div class="section-h">问题描述</div>
+          <div class="input" style="height:64px">请描述遇到的问题，便于客服快速处理…</div>
+          <div class="section-h">上传凭证（图片/视频）</div>
+          <div class="stepimg"><i>＋图</i><i>＋图</i><i class="vid">＋视频</i></div>
+        </div>
+        <div class="card">
+          <div class="muted">关联订单：#20261109-01 · 奶油法式猫眼 ×2 副</div>
+        </div>
+        <div class="note">提交后将跳转客服会话，由店主人工协商处理</div>
+      </div>`,
+    footer:`<div class="btn" onclick="alert('已提交，正在跳转客服会话…')">提交并联系客服</div>`
+  },
+
+  user: {
+    title:"我的", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="card row">
+          <div class="avatar">U</div>
+          <div><div style="font-size:13px;font-weight:600">微信用户</div><div class="muted">点击授权登录</div></div>
+        </div>
+        <div class="card">
+          <div class="cell" onclick="go('orders')">我的订单 <span class="r">全部 ›</span></div>
+          <div class="cell">我的收藏 <span class="r">服务端同步 ›</span></div>
+          <div class="cell">收货地址 <span class="r">›</span></div>
+        </div>
+        <div class="card">
+          <div class="cell">尺码测量指引 <span class="r">静态图文 ›</span></div>
+          <div class="cell">用户协议 <span class="r">占位 ›</span></div>
+          <div class="cell">隐私政策 <span class="r">占位 ›</span></div>
+          <div class="cell" onclick="go('afterSale')">联系客服 <span class="r">›</span></div>
+        </div>
+        <div class="card" style="border:1px dashed var(--border);text-align:center">
+          <div class="muted">管理端入口：扫码进入（不在此暴露）</div>
+        </div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:3
+  },
+
+  /* ---------- 管理端 ---------- */
+  adminLogin: {
+    title:"管理端登录", role:"管理端",
+    html:`
+      <div class="pad" style="padding-top:30px;text-align:center">
+        <div style="width:120px;height:120px;margin:0 auto;border:3px dashed var(--admin-accent);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--admin-accent);font-size:12px">扫码区</div>
+        <div style="font-size:13px;font-weight:600;margin-top:16px">请扫描管理入口码</div>
+        <div class="muted" style="margin-top:6px">一人一码 · 停用后立即失效</div>
+        <div class="input" style="margin-top:18px;text-align:left">校验身份中…</div>
+        <div class="role-banner" style="text-align:left;margin-top:14px">当前身份：美甲师（只读制作档案，不可改价/上下架）</div>
+        <div class="perm-note" style="text-align:left">非授权角色扫码 → 校验失败，返回首页</div>
+        <div class="btn admin" style="margin-top:16px" onclick="go('adminHome')">模拟扫码成功进入</div>
+      </div>`
+  },
+
+  adminHome: {
+    title:"管理后台", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="role-banner">当前身份：店主（owner）· 全部权限</div>
+        <div class="stat">
+          <div><b>128</b><small>在售商品</small></div>
+          <div><b>36</b><small>待发货</small></div>
+          <div><b>7</b><small>待处理售后</small></div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <div class="cell">商品管理 <span class="r">›</span></div>
+          <div class="cell" onclick="go('archiveEdit')">制作档案（私有）<span class="r">›</span></div>
+          <div class="cell" onclick="go('adminOrders')">订单管理 <span class="r">›</span></div>
+          <div class="cell" onclick="go('adminReview')">评价管理 <span class="r">›</span></div>
+        </div>
+        <div class="card">
+          <div class="cell" onclick="go('adminReview')">运费规则配置 <span class="r">满2副包邮 / 固定邮费 ›</span></div>
+          <div class="cell" onclick="go('adminAccounts')">账号与入口码 <span class="r">发码 / 停用 ›</span></div>
+        </div>
+      </div>`
+  },
+
+  archiveEdit: {
+    title:"制作档案", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="role-banner">私有字段 · 仅管理端接口下发，普通用户不可见</div>
+        <div class="section-h">材料清单</div>
+        <div class="card">
+          <div class="input filled">甲片型号：短圆 M 号 ×24</div>
+          <div class="input filled">甲油胶：某品牌 #012 裸粉</div>
+          <div class="input filled">饰品：碎钻 / 贝壳片 若干</div>
+          <div class="btn outline" style="margin-top:4px">+ 添加材料行</div>
+        </div>
+        <div class="section-h">制作步骤（多图 + 短视频，可排序）</div>
+        <div class="card">
+          <div class="stepitem"><div class="stepno">1</div>
+            <div style="flex:1"><div style="font-size:12px">打磨甲面、涂底胶</div>
+              <div class="stepimg"><i>图</i><i>图</i><i class="vid">▶视频</i></div></div></div>
+          <div class="stepitem"><div class="stepno">2</div>
+            <div style="flex:1"><div style="font-size:12px">上色、猫眼吸磁</div>
+              <div class="stepimg"><i>图</i><i>图</i></div></div></div>
+          <div class="btn outline">+ 添加步骤</div>
+        </div>
+        <div class="section-h">成本核算 <span class="badge own">仅店主</span></div>
+        <div class="card">
+          <div class="input filled">材料成本：¥18 / 耗时：2h / 建议售价：¥68</div>
+        </div>
+        <div class="btn admin" onclick="go('archiveRead')">保存并预览美甲师视图</div>
+      </div>`
+  },
+
+  archiveRead: {
+    title:"制作档案（只读）", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="role-banner">当前身份：美甲师 · 仅可查看材料与步骤</div>
+        <div class="section-h">材料清单</div>
+        <div class="card">
+          <div class="cell">甲片型号 <span class="r">短圆 M 号 ×24</span></div>
+          <div class="cell">甲油胶 <span class="r">#012 裸粉</span></div>
+          <div class="cell">饰品 <span class="r">碎钻 / 贝壳片</span></div>
+        </div>
+        <div class="section-h">制作步骤</div>
+        <div class="card">
+          <div class="stepitem"><div class="stepno">1</div>
+            <div style="flex:1"><div style="font-size:12px">打磨甲面、涂底胶</div>
+              <div class="stepimg"><i>图</i><i>图</i><i class="vid">▶</i></div></div></div>
+          <div class="stepitem"><div class="stepno">2</div>
+            <div style="flex:1"><div style="font-size:12px">上色、猫眼吸磁</div>
+              <div class="stepimg"><i>图</i><i>图</i></div></div></div>
+        </div>
+        <div class="perm-note">成本字段不展示 · 价格/上下架按钮不可见 · 改价接口返回 403</div>
+      </div>`,
+    footer:`<div class="btn dis">只读模式</div>`
+  },
+
+  adminAccounts: {
+    title:"账号与入口码", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="card">
+          <div class="row between">
+            <div><div style="font-size:12px;font-weight:600">美甲师 A</div><div class="muted">角色：artist</div></div>
+            <span class="badge art">启用中</span>
+          </div>
+          <div class="row between" style="margin-top:8px">
+            <div class="muted">入口码：NM-8F2K</div>
+            <span class="tag click" onclick="alert('已停用，该码立即失效')">停用</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between">
+            <div><div style="font-size:12px;font-weight:600">美甲师 B</div><div class="muted">角色：artist</div></div>
+            <span class="badge no">已停用</span>
+          </div>
+          <div class="muted" style="margin-top:8px">码已失效，扫码校验失败</div>
+        </div>
+        <div class="btn admin" onclick="alert('已生成新入口码（一人一码）')">+ 生成新入口码（一人一码）</div>
+        <div class="perm-note">多主体场景：入口码与 merchantId 绑定，数据按主体隔离</div>
+      </div>`
+  },
+
+  adminOrders: {
+    title:"订单管理", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="cat"><span class="active">全部</span><span>待发货</span><span>待收货</span><span>售后</span></div>
+        <div class="card" style="margin-top:10px">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261109-01</span><span class="tag">待发货</span></div>
+          <div class="muted" style="margin-top:5px">奶油法式猫眼 · M · 短圆 ×2 副</div>
+          <div class="note" style="margin-top:6px">定制备注：甲床偏宽，请按备注调整</div>
+          <div class="row between" style="margin-top:8px">
+            <span class="price" style="font-size:13px">¥136</span>
+            <span class="tag click" onclick="alert('已填入物流单号，订单状态更新为待收货')">填物流单号 ›</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261108-12</span><span class="tag gray">已完成</span></div>
+          <div class="muted" style="margin-top:5px">碎钻渐变长梯 · L · 长梯 ×1 副 · 运费 ¥8</div>
+        </div>
+      </div>`
+  },
+
+  adminReview: {
+    title:"评价与规则", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="section-h">评价管理（先发先显）</div>
+        <div class="card">
+          <div class="row between">
+            <div style="font-size:11px">★★★★★ 很好看<br><span class="muted">图片 / 视频晒单</span></div>
+            <span class="tag click" onclick="alert('该评价已隐藏，用户端不再展示')">隐藏</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between">
+            <div style="font-size:11px">★★★★☆ 尺寸合适<br><span class="muted">图片</span></div>
+            <span class="tag gray click" onclick="alert('该评价已删除')">删除</span>
+          </div>
+        </div>
+        <div class="section-h" style="margin-top:10px">运费规则</div>
+        <div class="card">
+          <div class="cell">满包邮阈值 <span class="r">2 副</span></div>
+          <div class="cell">固定邮费 <span class="r">¥ 8</span></div>
+          <div class="input filled" style="margin-top:6px">修改后立即生效</div>
+        </div>
+      </div>`
+  }
+};
+
+/* ================== 渲染逻辑 ================== */
+const NAV_ORDER = [
+  ["home","首页"],["list","搜索列表"],["detail","商品详情"],["cart","购物车"],
+  ["order","确认订单"],["orders","我的订单"],["orderDetail","订单详情"],["afterSale","售后协商"],
+  ["user","我的"],["adminLogin","管理登录"],["adminHome","管理后台"],["archiveEdit","档案编辑"],
+  ["archiveRead","档案只读"],["adminAccounts","账号与码"],["adminOrders","订单管理"],["adminReview","评价规则"]
+];
+
+let current = "home";
+const stage = document.getElementById("stage");
+const navBar = document.getElementById("navBar");
+
+function isAdminPage(key){ return key.startsWith("admin") || key==="archiveEdit" || key==="archiveRead"; }
+
+function renderNav(){
+  navBar.innerHTML = NAV_ORDER.map(([k,label])=>{
+    const cls = (k===current?"on ":"") + (isAdminPage(k)?"admin":"");
+    return `<button class="${cls}" onclick="go('${k}')">${label}</button>`;
+  }).join("");
+}
+
+function renderTabs(tab, on){
+  if(!tab) return "";
+  const icons=["⌂","▤","🛒","☺"], names=["首页","分类","购物车","我的"];
+  return `<div class="tabbar">` + tab.map((_,i)=>{
+    const onCls = i===on?"on":"";
+    const target = ["home","list","cart","user"][i];
+    return `<div class="${onCls}" onclick="go('${target}')"><span class="ico">${icons[i]}</span>${names[i]}</div>`;
+  }).join("") + `</div>`;
+}
+
+function render(){
+  const p = PAGES[current];
+  if(!p) return;
+  const tabOn = p.tabOn !== undefined ? p.tabOn : -1;
+  stage.innerHTML = `
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>●●● ⚡</span></div>
+      <div class="navbar">
+        ${p.role==="管理端"?'<span class="back" onclick="go(\'adminHome\')">‹</span>':''}
+        ${p.title}
+      </div>
+      <div class="body">${p.html}</div>
+      ${p.footer?`<div class="footerbar">${p.footer}</div>`:""}
+      ${p.tab?renderTabs(p.tab, tabOn):""}
+    </div>
+  `;
+  renderNav();
+}
+
+function go(key){
+  if(!PAGES[key]) return;
+  current = key;
+  render();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* 初始化 */
+render();
+</script>
+
+</body>
+</html>

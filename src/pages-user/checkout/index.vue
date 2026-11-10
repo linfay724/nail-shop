@@ -20,16 +20,26 @@
         <image class="cover" :src="item.cover" mode="aspectFill" />
         <view class="item-info">
           <text class="name">{{ item.name }}</text>
-          <text class="spec">{{ item.size }} · {{ item.pieceCount }} 片 × {{ item.quantity }}</text>
+          <text class="spec">{{ specOf(item) }} × {{ item.quantity }}</text>
         </view>
         <price-tag :price="item.price * item.quantity" />
       </view>
     </view>
 
-    <view class="block">
-      <view class="block-title">订单备注</view>
-      <u-textarea v-model="remark" :maxlength="100" placeholder="选填，如指定发货时间" count />
+    <view v-if="needsCustomNote" class="block">
+      <view class="block-title">定制备注（必填）</view>
+      <textarea
+        v-model="customNote"
+        class="custom-note"
+        maxlength="200"
+        placeholder="所选尺码或甲型为「其他」，请补充甲床尺寸、期望甲型或参考图说明"
+      />
+      <text v-if="customNoteError" class="error">{{ customNoteError }}</text>
     </view>
+
+    <shipping-bar :config="shipping.config" :paid-sets="paidSets" :goods-amount="goodsAmount" />
+
+    <view class="tips">本店仅支持快递发货，运费按副数计算；售后请联系客服协商。</view>
 
     <view class="bottom-bar">
       <text class="total">应付 {{ formatPrice(total) }}</text>
@@ -59,25 +69,52 @@ import { addressApi } from '@/api/address'
 import { orderApi } from '@/api/order'
 import { payOrder } from '@/api/payment'
 import { toastError } from '@/api/transport'
-import type { Address, OrderItem } from '@/api/contract'
+import {
+  SHAPE_LABELS,
+  SIZE_LABELS,
+  type Address,
+  type OrderItem,
+} from '@/api/contract'
 import PriceTag from '@/components/price-tag.vue'
+import ShippingBar from '@/components/shipping-bar.vue'
 import { formatPrice } from '@/utils/price'
+import { calcShipping } from '@/utils/shipping'
 import { getStorage, removeStorage, setStorage } from '@/utils/storage'
 import { useCartStore } from '@/stores/cart'
+import { useShippingStore } from '@/stores/shipping'
 
 const cart = useCartStore()
+const shipping = useShippingStore()
 
 const items = ref<OrderItem[]>([])
 const addresses = ref<Address[]>([])
 const selectedAddressId = ref('')
-const remark = ref('')
+const customNote = ref('')
+const customNoteError = ref('')
 const submitting = ref(false)
 const addressPickerVisible = ref(false)
 
 const selectedAddress = computed(
   () => addresses.value.find((item) => item.id === selectedAddressId.value) ?? addresses.value[0] ?? null,
 )
-const total = computed(() => items.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
+const goodsAmount = computed(() =>
+  items.value.reduce((sum, item) => sum + item.price * item.quantity, 0),
+)
+const paidSets = computed(() =>
+  items.value.reduce((total, item) => (item.isAccessory ? total : total + item.quantity), 0),
+)
+const shippingFee = computed(() => calcShipping(shipping.config, paidSets.value))
+const total = computed(() => goodsAmount.value + shippingFee.value)
+const needsCustomNote = computed(() =>
+  items.value.some((item) => item.size === 'OTHER' || item.shape === 'OTHER'),
+)
+
+function specOf(item: OrderItem): string {
+  if (item.isAccessory || !item.size || !item.shape) {
+    return '工具包'
+  }
+  return `${SIZE_LABELS[item.size]} / ${SHAPE_LABELS[item.shape]} · ${item.unit}`
+}
 
 async function loadAddresses(): Promise<void> {
   try {
@@ -95,6 +132,7 @@ onShow(() => {
   const stored = getStorage<OrderItem[]>('checkout_items', [])
   items.value = Array.isArray(stored) ? stored : []
   void loadAddresses()
+  void shipping.load()
 })
 
 function goAddress(): void {
@@ -124,13 +162,19 @@ async function submit(): Promise<void> {
     uni.showToast({ title: '没有待结算商品', icon: 'none' })
     return
   }
+  if (needsCustomNote.value && !customNote.value.trim()) {
+    customNoteError.value = '请填写定制备注，说明甲床尺寸或期望甲型'
+    uni.showToast({ title: '请填写定制备注', icon: 'none' })
+    return
+  }
+  customNoteError.value = ''
 
   submitting.value = true
   try {
     const order = await orderApi.create({
       items: items.value,
       addressId: selectedAddress.value.id,
-      remark: remark.value,
+      customNote: customNote.value.trim(),
     })
 
     items.value.forEach((item) => cart.remove(item.skuId))
@@ -153,27 +197,28 @@ async function submit(): Promise<void> {
 <style lang="scss" scoped>
 .checkout {
   min-height: 100vh;
-  padding: $app-space-base $app-space-base 200rpx;
+  padding: 28rpx 28rpx 200rpx;
   background-color: $app-color-bg;
 }
 
 .block {
-  margin-bottom: $app-space-base;
-  padding: $app-space-base;
-  background-color: #fff;
-  border-radius: $app-radius-base;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-lg;
 }
 
 .block-title {
-  margin-bottom: $app-space-sm;
-  font-size: $app-font-base;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
   color: $app-color-text;
   font-weight: 600;
 }
 
 .address-empty {
-  font-size: $app-font-sm;
-  color: $app-color-primary;
+  font-size: 22rpx;
+  color: $app-color-primary-dark;
 }
 
 .address {
@@ -188,49 +233,76 @@ async function submit(): Promise<void> {
 }
 
 .receiver {
-  font-size: $app-font-base;
+  font-size: 24rpx;
   color: $app-color-text;
+  font-weight: 600;
 }
 
 .detail {
-  margin-top: $app-space-xs;
-  font-size: $app-font-sm;
-  color: $app-color-text-secondary;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: $app-color-text-muted;
 }
 
 .switch {
-  font-size: $app-font-sm;
-  color: $app-color-primary;
+  font-size: 20rpx;
+  color: $app-color-primary-dark;
 }
 
 .item {
   display: flex;
   align-items: center;
-  margin-bottom: $app-space-sm;
+  margin-bottom: 16rpx;
 }
 
 .cover {
   width: 120rpx;
   height: 120rpx;
-  border-radius: $app-radius-sm;
+  border-radius: 20rpx;
+  background-color: $app-color-input-bg;
 }
 
 .item-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: $app-space-sm;
+  margin-left: 16rpx;
 }
 
 .name {
-  font-size: $app-font-sm;
+  font-size: 24rpx;
   color: $app-color-text;
 }
 
 .spec {
-  margin-top: $app-space-xs;
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  color: $app-color-text-muted;
+}
+
+.custom-note {
+  width: 100%;
+  height: 160rpx;
+  padding: 18rpx;
+  font-size: 22rpx;
+  color: $app-color-text;
+  background-color: $app-color-input-bg;
+  border: 1rpx solid $app-color-border;
+  border-radius: 18rpx;
+}
+
+.error {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 18rpx;
+  color: $app-color-danger;
+}
+
+.tips {
+  margin-top: 16rpx;
+  font-size: 18rpx;
+  color: $app-color-text-muted;
+  line-height: 1.6;
 }
 
 .bottom-bar {
@@ -241,14 +313,15 @@ async function submit(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $app-space-sm $app-space-base;
-  background-color: #fff;
+  padding: 20rpx 24rpx;
+  background-color: $app-color-white;
+  border-top: 1rpx solid $app-color-border;
 }
 
 .total {
-  font-size: $app-font-base;
-  color: $app-color-primary;
-  font-weight: 600;
+  font-size: 26rpx;
+  color: $app-color-primary-dark;
+  font-weight: 700;
 }
 
 .picker {

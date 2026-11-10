@@ -1,19 +1,19 @@
 <template>
-  <view class="admin-products">
+  <view class="admin-products admin-theme">
     <view class="toolbar">
-      <u-search v-model="keyword" placeholder="搜索商品名称" :show-action="false" />
+      <input v-model="keyword" class="search" placeholder="搜索商品名称" confirm-type="search" @confirm="reload" />
       <u-button type="primary" size="small" custom-style="margin-left: 20rpx" @click="create">
         新增
       </u-button>
     </view>
 
-    <view v-if="filtered.length === 0" class="hint">暂无商品</view>
+    <view v-if="products.length === 0 && !loading" class="hint">暂无商品</view>
 
-    <view v-for="item in filtered" :key="item.id" class="item">
+    <view v-for="item in products" :key="item.id" class="item">
       <image class="cover" :src="item.cover" mode="aspectFill" />
       <view class="info">
         <text class="name">{{ item.name }}</text>
-        <text class="meta">{{ item.style }} · {{ item.shape }} · {{ formatPrice(item.price) }}</text>
+        <text class="meta">{{ item.style }} · {{ formatPrice(item.price) }} · {{ item.skus.length }} 个组合</text>
         <view class="row">
           <u-switch :model-value="item.onSale" size="20" @change="createToggle(item.id)" />
           <text class="switch-label">{{ item.onSale ? '已上架' : '已下架' }}</text>
@@ -25,12 +25,17 @@
         <text class="action danger" @click="remove(item)">删除</text>
       </view>
     </view>
+
+    <view v-if="products.length > 0" class="footer">
+      <text v-if="loading">加载中…</text>
+      <text v-else-if="!hasMore">没有更多了</text>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { onLoad, onShow } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { onLoad, onReachBottom, onShow } from '@dcloudio/uni-app'
 import { adminApi } from '@/api/admin'
 import { toastError } from '@/api/transport'
 import type { AdminProduct } from '@/api/contract'
@@ -39,29 +44,46 @@ import { formatPrice } from '@/utils/price'
 
 const products = ref<AdminProduct[]>([])
 const keyword = ref('')
+const page = ref(1)
+const hasMore = ref(false)
+const loading = ref(false)
 let guarded = false
 
-const filtered = computed(() =>
-  products.value.filter((item) => !keyword.value || item.name.includes(keyword.value)),
-)
-
-async function load(): Promise<void> {
+async function load(reset = true): Promise<void> {
   if (!guarded) {
     return
   }
+
+  loading.value = true
   try {
-    products.value = await adminApi.listProducts()
+    const target = reset ? 1 : page.value + 1
+    const result = await adminApi.listProducts(keyword.value.trim(), target)
+    products.value = reset ? result.list : [...products.value, ...result.list]
+    page.value = result.page
+    hasMore.value = result.hasMore
   } catch (error) {
     toastError(error)
+  } finally {
+    loading.value = false
   }
 }
 
+function reload(): void {
+  void load(true)
+}
+
 onLoad(() => {
-  guarded = useAdminGuard()
+  guarded = useAdminGuard('product:read')
 })
 
 onShow(() => {
-  void load()
+  void load(true)
+})
+
+onReachBottom(() => {
+  if (hasMore.value && !loading.value) {
+    void load(false)
+  }
 })
 
 function createToggle(id: string) {
@@ -72,7 +94,8 @@ function createToggle(id: string) {
 
 async function toggle(id: string, onSale: boolean): Promise<void> {
   try {
-    products.value = await adminApi.toggleProduct(id, onSale)
+    const updated = await adminApi.toggleProduct(id, onSale)
+    products.value = products.value.map((item) => (item.id === id ? updated : item))
   } catch (error) {
     toastError(error)
   }
@@ -112,8 +135,8 @@ function remove(item: AdminProduct): void {
 <style lang="scss" scoped>
 .admin-products {
   min-height: 100vh;
-  padding: $app-space-base;
-  background-color: $app-color-bg;
+  padding: 28rpx;
+  background-color: $app-color-admin-bg;
 }
 
 .toolbar {
@@ -122,20 +145,32 @@ function remove(item: AdminProduct): void {
   margin-bottom: $app-space-base;
 }
 
+.search {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 22rpx;
+  font-size: 22rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-pill;
+}
+
 .hint {
   padding: $app-space-lg 0;
   text-align: center;
-  font-size: $app-font-sm;
-  color: $app-color-text-secondary;
+  font-size: 22rpx;
+  color: $app-color-text-muted;
 }
 
 .item {
   display: flex;
   align-items: flex-start;
-  margin-bottom: $app-space-sm;
-  padding: $app-space-sm;
-  background-color: #fff;
-  border-radius: $app-radius-base;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
 }
 
 .cover {
@@ -186,6 +221,13 @@ function remove(item: AdminProduct): void {
 }
 
 .danger {
-  color: #dd524d;
+  color: $app-color-danger;
+}
+
+.footer {
+  padding: $app-space-base 0;
+  text-align: center;
+  font-size: $app-font-xs;
+  color: $app-color-text-secondary;
 }
 </style>

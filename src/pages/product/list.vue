@@ -1,55 +1,89 @@
 <template>
   <view class="product-list">
-    <u-tabs :list="styleTabs" :current="styleIndex" @change="onStyleChange" />
-
-    <view class="chips">
-      <text class="chip" :class="{ active: shape === '' }" @click="selectShape('')">全部甲型</text>
-      <text
-        v-for="item in SHAPE_OPTIONS"
-        :key="item"
-        class="chip"
-        :class="{ active: shape === item }"
-        @click="selectShape(item)"
-      >
-        {{ item }}
-      </text>
-      <text class="clear" @click="clearFilters">清空筛选</text>
+    <view class="searchbar">
+      <text class="search-icon">🔍</text>
+      <input
+        v-model="keyword"
+        class="search-input"
+        placeholder="搜索商品名称或标签"
+        confirm-type="search"
+        @confirm="onSearch"
+      />
+      <text class="search-btn" @click="onSearch">搜索</text>
     </view>
 
-    <view v-if="loading" class="hint">加载中…</view>
+    <view class="cat">
+      <text
+        v-for="item in SORTS"
+        :key="item.value"
+        class="cat-item"
+        :class="{ active: sort === item.value }"
+        @click="selectSort(item.value)"
+      >
+        {{ item.name }}
+      </text>
+    </view>
+
+    <view v-if="loading && list.length === 0" class="hint">加载中…</view>
     <u-empty v-else-if="list.length === 0" mode="list" text="没有符合条件的商品" />
-    <view v-else class="grid">
-      <product-card v-for="item in list" :key="item.id" :product="item" @click="openDetail" />
+    <view v-else class="list">
+      <view v-for="item in list" :key="item.id" class="card" @click="openDetail(item)">
+        <image class="thumb" :src="item.cover" mode="aspectFill" lazy-load />
+        <view class="detail">
+          <text class="name">{{ item.name }}</text>
+          <view class="tags">
+            <text class="tag">{{ item.style }}</text>
+            <text v-if="item.tags.length > 0" class="tag tag-gray">{{ item.tags[0] }}</text>
+          </view>
+          <view class="meta">
+            <price-tag :price="item.price" :unit="item.isAccessory ? '/件' : '/副'" />
+            <text class="sales">已售{{ item.sales }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view v-if="list.length > 0" class="footer">
+      <text v-if="loading">加载中…</text>
+      <text v-else-if="!hasMore">— 上拉加载更多 · 分页 —</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
-import { productApi } from '@/api/product'
-import { SHAPE_OPTIONS, STYLE_OPTIONS } from '@/api/contract'
-import type { ProductShape, PublicProduct } from '@/api/contract'
-import ProductCard from '@/components/product-card.vue'
-import { getStorage, removeStorage, setStorage } from '@/utils/storage'
+import { ref } from 'vue'
+import { onReachBottom, onShow } from '@dcloudio/uni-app'
+import { productApi, type ProductSort } from '@/api/product'
+import type { PublicProduct } from '@/api/contract'
+import PriceTag from '@/components/price-tag.vue'
 
-interface ProductFilter {
-  style?: string
-  shape?: string
-}
+const SORTS: Array<{ name: string; value: ProductSort }> = [
+  { name: '综合', value: 'default' },
+  { name: '销量', value: 'sales' },
+  { name: '上新', value: 'newest' },
+  { name: '价格', value: 'price' },
+]
 
-const styleIndex = ref(0)
-const shape = ref<ProductShape | ''>('')
+const sort = ref<ProductSort>('default')
+const keyword = ref('')
 const list = ref<PublicProduct[]>([])
 const loading = ref(false)
+const page = ref(1)
+const hasMore = ref(false)
 
-const styleTabs = computed(() => [{ name: '全部' }, ...STYLE_OPTIONS.map((style) => ({ name: style }))])
-
-async function load(): Promise<void> {
+async function load(reset = true): Promise<void> {
   loading.value = true
   try {
-    const style = styleIndex.value === 0 ? undefined : STYLE_OPTIONS[styleIndex.value - 1]
-    list.value = await productApi.list({ style, shape: shape.value || undefined })
+    const target = reset ? 1 : page.value + 1
+    const result = await productApi.search({
+      keyword: keyword.value.trim() || undefined,
+      sort: sort.value,
+      page: target,
+      pageSize: 10,
+    })
+    list.value = reset ? result.list : [...list.value, ...result.list]
+    page.value = result.page
+    hasMore.value = result.hasMore
   } catch (error) {
     console.warn('[product/list] load failed', error)
   } finally {
@@ -57,45 +91,16 @@ async function load(): Promise<void> {
   }
 }
 
-function onStyleChange(index: number): void {
-  styleIndex.value = index
-  persistFilter()
-  void load()
-}
-
-function selectShape(value: ProductShape | ''): void {
-  shape.value = value
-  persistFilter()
-  void load()
-}
-
-function clearFilters(): void {
-  styleIndex.value = 0
-  shape.value = ''
-  persistFilter()
-  void load()
-}
-
-function persistFilter(): void {
-  const filter: ProductFilter = {}
-  if (styleIndex.value > 0) {
-    filter.style = STYLE_OPTIONS[styleIndex.value - 1]
-  }
-  if (shape.value) {
-    filter.shape = shape.value
-  }
-  setStorage('product_filter', filter)
-}
-
-function applyIncomingFilter(): void {
-  const filter = getStorage<ProductFilter | null>('product_filter', null)
-  if (!filter) {
+function selectSort(value: ProductSort): void {
+  if (sort.value === value) {
     return
   }
+  sort.value = value
+  void load(true)
+}
 
-  styleIndex.value = filter.style ? Math.max(0, STYLE_OPTIONS.indexOf(filter.style as never) + 1) : 0
-  shape.value = (filter.shape as ProductShape | undefined) ?? ''
-  removeStorage('product_filter')
+function onSearch(): void {
+  void load(true)
 }
 
 function openDetail(product: PublicProduct): void {
@@ -103,58 +108,154 @@ function openDetail(product: PublicProduct): void {
 }
 
 onShow(() => {
-  applyIncomingFilter()
-  void load()
+  void load(true)
+})
+
+onReachBottom(() => {
+  if (hasMore.value && !loading.value) {
+    void load(false)
+  }
 })
 </script>
 
 <style lang="scss" scoped>
 .product-list {
   min-height: 100vh;
+  padding: 28rpx;
   padding-bottom: $app-space-lg;
   background-color: $app-color-bg;
 }
 
-.chips {
+.searchbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  padding: $app-space-sm $app-space-base;
+  padding: 16rpx 24rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-pill;
 }
 
-.chip {
-  margin: 0 $app-space-xs $app-space-xs 0;
-  padding: 8rpx 24rpx;
+.search-icon {
+  margin-right: 10rpx;
+  font-size: 20rpx;
+}
+
+.search-input {
+  flex: 1;
   font-size: $app-font-sm;
   color: $app-color-text;
-  background-color: #fff;
+}
+
+.search-btn {
+  margin-left: $app-space-sm;
+  font-size: $app-font-xs;
+  color: $app-color-primary-dark;
+}
+
+.cat {
+  display: flex;
+  flex-wrap: nowrap;
+  margin-top: 16rpx;
+  padding-bottom: 6rpx;
+}
+
+.cat-item {
+  flex: 0 0 auto;
+  margin-right: 14rpx;
+  padding: 10rpx 22rpx;
+  font-size: 22rpx;
+  color: $app-color-text-secondary;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
   border-radius: $app-radius-pill;
-  border: 2rpx solid $app-color-border;
 }
 
 .active {
-  color: $app-color-primary-dark;
-  background-color: $app-color-primary-light;
-  border-color: #ffd9e8;
-}
-
-.clear {
-  margin-left: auto;
-  font-size: $app-font-xs;
-  color: $app-color-text-secondary;
+  color: $app-color-white;
+  background-color: $app-color-primary-dark;
+  border-color: $app-color-primary-dark;
 }
 
 .hint {
   padding: $app-space-lg 0;
   text-align: center;
   font-size: $app-font-sm;
-  color: $app-color-text-secondary;
+  color: $app-color-text-muted;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: $app-space-sm;
-  padding: 0 $app-space-base;
+.list {
+  margin-top: 20rpx;
+}
+
+.card {
+  display: flex;
+  margin-bottom: 16rpx;
+  padding: 20rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 120rpx;
+  height: 120rpx;
+  margin-right: 20rpx;
+  border-radius: 20rpx;
+  background-color: $app-color-input-bg;
+}
+
+.detail {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: $app-color-text;
+}
+
+.tags {
+  display: flex;
+  margin-top: 8rpx;
+}
+
+.tag {
+  margin-right: 6rpx;
+  padding: 4rpx 12rpx;
+  font-size: 16rpx;
+  color: $app-color-primary-dark;
+  background-color: $app-color-primary-light;
+  border-radius: $app-radius-pill;
+}
+
+.tag-gray {
+  color: $app-color-text-muted;
+  background-color: #f4f1f0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.sales {
+  font-size: 16rpx;
+  color: $app-color-text-muted;
+}
+
+.footer {
+  padding: 20rpx 0;
+  text-align: center;
+  font-size: 18rpx;
+  color: $app-color-text-muted;
 }
 </style>

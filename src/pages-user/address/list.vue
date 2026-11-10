@@ -80,7 +80,7 @@ onShow(() => {
 <style lang="scss" scoped>
 .address-list {
   min-height: 100vh;
-  padding: $app-space-base;
+  padding: 28rpx;
   background-color: $app-color-bg;
 }
 
@@ -89,10 +89,12 @@ onShow(() => {
 }
 
 .item {
-  margin-bottom: $app-space-sm;
-  padding: $app-space-sm;
-  background-color: #fff;
-  border-radius: $app-radius-base;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: $app-color-white;
+  border: 1rpx solid $app-color-border;
+  border-radius: $app-radius-lg;
+  box-shadow: $app-shadow;
 }
 
 .row {
@@ -141,6 +143,6 @@ onShow(() => {
 }
 
 .danger {
-  color: #dd524d;
+  color: $app-color-danger;
 }
 </style>

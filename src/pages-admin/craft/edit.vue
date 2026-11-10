@@ -1,16 +1,22 @@
 <template>
-  <view class="craft-edit">
+  <view class="craft-edit admin-theme">
+    <view class="head">
+      <text class="product-name">{{ productName }}</text>
+      <text class="mode">{{ readOnly ? '只读查看 · 美甲师' : '可编辑 · 店主' }}</text>
+    </view>
+
     <view class="block">
       <text class="block-title">材料清单</text>
-      <text class="hint">每行材料需填写名称、用量与单位</text>
+      <text v-if="!readOnly" class="hint">每行材料需填写名称与用量</text>
       <material-row
         v-for="(line, index) in materials"
         :key="index"
         :material="line"
+        :readonly="readOnly"
         @update:material="createMaterialHandler(index)"
         @remove="removeMaterial(index)"
       />
-      <u-button size="small" plain @click="addMaterial">新增材料</u-button>
+      <u-button v-if="!readOnly" size="small" plain @click="addMaterial">新增材料</u-button>
     </view>
 
     <view class="block">
@@ -20,31 +26,36 @@
         :key="index"
         :step="step"
         :index="index"
+        :readonly="readOnly"
         @update:step="createStepHandler(index)"
         @remove="removeStep"
         @move-up="moveStep(index, -1)"
         @move-down="moveStep(index, 1)"
       />
-      <u-button size="small" plain @click="addStep">新增步骤</u-button>
+      <u-button v-if="!readOnly" size="small" plain @click="addStep">新增步骤</u-button>
     </view>
 
-    <view class="block">
-      <text class="block-title">成本核算</text>
+    <view v-if="canReadCost" class="block">
+      <text class="block-title">成本与工时（仅店主可见）</text>
       <view class="cost-row">
         <text class="cost-label">材料成本（元）</text>
         <u-input v-model="materialCostYuan" type="digit" custom-style="width: 200rpx" />
       </view>
       <view class="cost-row">
-        <text class="cost-label">其他成本（元）</text>
-        <u-input v-model="otherCostYuan" type="digit" custom-style="width: 200rpx" />
+        <text class="cost-label">工时（小时）</text>
+        <u-input v-model="hoursText" type="digit" custom-style="width: 200rpx" />
+      </view>
+      <view class="cost-row">
+        <text class="cost-label">建议售价（元）</text>
+        <u-input v-model="suggestedPriceYuan" type="digit" custom-style="width: 200rpx" />
       </view>
       <view class="summary">
-        <text class="summary-item">预估总成本：{{ formatPrice(totalCost) }}</text>
+        <text class="summary-item">商品售价：{{ formatPrice(productPrice) }}</text>
         <text class="summary-item">预估毛利：{{ formatPrice(margin) }}</text>
       </view>
     </view>
 
-    <u-button type="primary" :loading="saving" @click="submit">保存档案</u-button>
+    <u-button v-if="canWrite" type="primary" :loading="saving" @click="submit">保存档案</u-button>
   </view>
 </template>
 
@@ -57,21 +68,28 @@ import type { CraftArchive, CraftStep, MaterialLine } from '@/api/contract'
 import MaterialRow from '@/components/material-row.vue'
 import StepEditor from '@/components/step-editor.vue'
 import { useAdminGuard } from '@/utils/admin-guard'
+import { useAdminStore } from '@/stores/admin'
 import { formatPrice } from '@/utils/price'
 
+const admin = useAdminStore()
+
 const productId = ref('')
+const productName = ref('制作档案')
 const productPrice = ref(0)
 const materials = ref<MaterialLine[]>([])
 const steps = ref<CraftStep[]>([])
 const materialCostYuan = ref('0')
-const otherCostYuan = ref('0')
+const hoursText = ref('0')
+const suggestedPriceYuan = ref('0')
 const saving = ref(false)
 let guarded = false
 
-const totalCost = computed(
-  () => toCents(materialCostYuan.value) + toCents(otherCostYuan.value),
+const readOnly = computed(() => !admin.can('craft:write'))
+const canWrite = computed(() => admin.can('craft:write'))
+const canReadCost = computed(() => admin.can('cost:read'))
+const margin = computed(
+  () => productPrice.value - (toCents(materialCostYuan.value) || 0),
 )
-const margin = computed(() => productPrice.value - totalCost.value)
 
 function toCents(yuan: string): number {
   const value = Number(yuan)
@@ -82,20 +100,29 @@ function toCents(yuan: string): number {
 }
 
 onLoad(async (options) => {
-  guarded = useAdminGuard()
+  guarded = useAdminGuard('craft:read')
   productId.value = options?.productId ?? ''
   if (!guarded || !productId.value) {
     return
   }
 
   try {
-    const products = await adminApi.listProducts()
-    productPrice.value = products.find((item) => item.id === productId.value)?.price ?? 0
+    if (admin.can('product:read')) {
+      const product = await adminApi.getProduct(productId.value)
+      productName.value = product.name
+      productPrice.value = product.price
+    }
+
     const archive = await adminApi.getCraft(productId.value)
     materials.value = archive.materials
     steps.value = archive.steps
-    materialCostYuan.value = (archive.materialCost / 100).toFixed(2)
-    otherCostYuan.value = (archive.otherCost / 100).toFixed(2)
+    productName.value = productName.value === '制作档案' ? `商品 ${productId.value}` : productName.value
+
+    if ('cost' in archive) {
+      materialCostYuan.value = (archive.cost.materialCost / 100).toFixed(2)
+      hoursText.value = String(archive.cost.hours)
+      suggestedPriceYuan.value = (archive.cost.suggestedPrice / 100).toFixed(2)
+    }
   } catch (error) {
     toastError(error)
   }
@@ -116,7 +143,7 @@ function removeMaterial(index: number): void {
 }
 
 function addStep(): void {
-  steps.value.push({ order: steps.value.length + 1, description: '', images: [] })
+  steps.value.push({ order: steps.value.length + 1, title: '', desc: '', images: [] })
 }
 
 function createStepHandler(index: number) {
@@ -142,28 +169,39 @@ function moveStep(index: number, offset: number): void {
 }
 
 async function submit(): Promise<void> {
-  if (!guarded) {
+  if (!guarded || !canWrite.value) {
     return
   }
   if (materials.value.some((line) => !line.name || !line.amount || line.amount <= 0)) {
     uni.showToast({ title: '材料名称与用量必须填写', icon: 'none' })
     return
   }
-  if (steps.value.some((step) => !step.description || step.images.length === 0)) {
-    uni.showToast({ title: '每一步都需要说明与图片', icon: 'none' })
+  if (steps.value.some((step) => !step.title || !step.desc || step.images.length === 0)) {
+    uni.showToast({ title: '每一步都需要标题、说明与图片', icon: 'none' })
     return
   }
-  if (toCents(materialCostYuan.value) < 0 || toCents(otherCostYuan.value) < 0) {
-    uni.showToast({ title: '成本必须为非负数值', icon: 'none' })
+  if (
+    toCents(materialCostYuan.value) < 0 ||
+    toCents(suggestedPriceYuan.value) < 0 ||
+    Number(hoursText.value) < 0
+  ) {
+    uni.showToast({ title: '成本与工时必须为非负数值', icon: 'none' })
     return
   }
 
   const archive: CraftArchive = {
     productId: productId.value,
     materials: materials.value.map((line) => ({ ...line })),
-    steps: steps.value.map((step, index) => ({ ...step, order: index + 1, images: [...step.images] })),
-    materialCost: toCents(materialCostYuan.value),
-    otherCost: toCents(otherCostYuan.value),
+    steps: steps.value.map((step, index) => ({
+      ...step,
+      order: index + 1,
+      images: [...step.images],
+    })),
+    cost: {
+      materialCost: toCents(materialCostYuan.value),
+      hours: Number(hoursText.value) || 0,
+      suggestedPrice: toCents(suggestedPriceYuan.value),
+    },
     updatedAt: new Date().toISOString(),
   }
 
@@ -182,8 +220,25 @@ async function submit(): Promise<void> {
 <style lang="scss" scoped>
 .craft-edit {
   min-height: 100vh;
-  padding: $app-space-base;
-  background-color: $app-color-bg;
+  padding: 28rpx;
+  background-color: $app-color-admin-bg;
+}
+
+.head {
+  padding: $app-space-base 0;
+}
+
+.product-name {
+  font-size: $app-font-lg;
+  color: $app-color-text;
+  font-weight: 600;
+}
+
+.mode {
+  display: block;
+  margin-top: $app-space-xs;
+  font-size: $app-font-xs;
+  color: $app-color-text-secondary;
 }
 
 .block {

@@ -76,26 +76,42 @@ $uni-color-paragraph: #3f536e; // 文章段落颜色
 $uni-font-size-paragraph: 15px;
 
 /* ---------------------------------------------------------------
- * 项目设计 token（粉蓝 / 小可爱系）
+ * 项目设计 token（对齐 docs/nail-prototype-v1.html v1.1）
+ * 玫瑰粉品牌色 + 莓果强调色 + 薰衣草管理端强调色
  * 必须先于 uView Pro 主题声明，保证可覆盖其默认变量
  * ------------------------------------------------------------- */
-$app-color-primary: #ff8fb1; // 樱花粉
-$app-color-primary-dark: #f2729d;
-$app-color-primary-light: #fff0f6;
-$app-color-secondary: #8ec9f5; // 婴儿蓝
-$app-color-secondary-dark: #6fb4ea;
-$app-color-secondary-light: #eef7ff;
-$app-color-text: #514b63; // 柔和紫灰
-$app-color-text-secondary: #a29cbd;
-$app-color-border: #f3edf8;
-$app-color-bg: #faf9fe; // 粉蓝雾底
-$app-color-danger: #ff7d9c;
+$app-color-primary: #e8b4b8; // 品牌玫瑰（描边、选中态衬底）
+$app-color-primary-hover: #d49a9e;
+$app-color-primary-dark: #8c3b4a; // 莓果（价格、链接、主按钮）
+$app-color-primary-light: #fdf3f4; // 标签底色
+$app-color-secondary: #d6d9e9; // 薰衣草
+$app-color-secondary-dark: #7c6cf0; // 管理端强调紫
+$app-color-secondary-light: #f0edff;
+$app-color-text: #3a3335;
+$app-color-text-secondary: #756b6d;
+$app-color-text-muted: #9a8f91;
+$app-color-border: #f0eae8;
+$app-color-border-soft: #f5f0ee;
+$app-color-input-bg: #f7f3f2;
+$app-color-bg: #faf7f5; // 页面底
+$app-color-admin-bg: #f5f4f3; // 管理端底
+$app-color-white: #ffffff;
+$app-color-danger: #a44b55;
+$app-color-success: #5b8c6e;
+$app-color-success-bg: #eef5f0;
+$app-color-warning: #c08a3e;
+$app-color-warning-text: #9c713a;
+$app-color-warning-bg: #fbf4e9;
+$app-color-warning-bg-soft: #fdf8f0;
+$app-color-danger-bg: #faeeee;
+$app-color-disabled-bg: #d8d2d1;
+$app-font-serif: "Songti SC", "Noto Serif CJK SC", serif;
 $app-radius-sm: 12rpx;
-$app-radius-base: 24rpx;
-$app-radius-lg: 32rpx;
+$app-radius-base: 20rpx;
+$app-radius-lg: 28rpx;
 $app-radius-pill: 999rpx;
-$app-shadow: 0 8rpx 28rpx rgba(255, 143, 177, 0.14);
-$app-shadow-blue: 0 8rpx 28rpx rgba(142, 201, 245, 0.18);
+$app-shadow: 0 4rpx 16rpx rgba(140, 59, 74, 0.06);
+$app-shadow-blue: 0 10rpx 28rpx rgba(140, 59, 74, 0.09);
 $app-space-xs: 8rpx;
 $app-space-sm: 16rpx;
 $app-space-base: 24rpx;
@@ -107,3 +123,37 @@ $app-font-lg: 32rpx;
 $app-font-xl: 40rpx;
 
 @import 'uview-pro/theme.scss';
+
+/**
+ * uView Pro 主题覆盖（对齐 docs/nail-prototype-v1.html v1.1）。
+ * 必须放在 @import 之后：uni.scss 会注入到每个组件样式，
+ * 且 theme.scss 的 :root,page 块以 uni-page-body[data-v-xxx] 的高优先级出现，
+ * 只有在同一注入块内、位于其后的同优先级声明才能稳定覆盖，
+ * 否则 u-button 等组件会回落到 uView 默认蓝 #2979ff。
+ */
+:root,
+page {
+    /* 主色：莓果（价格、主按钮、激活态） */
+    --u-type-primary: #8c3b4a;
+    --u-type-primary-rgb: 140, 59, 74;
+    --u-type-primary-dark: #73303c;
+    --u-type-primary-dark-rgb: 115, 48, 60;
+    --u-type-primary-disabled: #d8d2d1;
+    --u-type-primary-disabled-rgb: 216, 210, 209;
+    --u-type-primary-light: #fdf3f4;
+    --u-type-primary-light-rgb: 253, 243, 244;
+
+    /* 信息色：管理端薰衣草 */
+    --u-type-info: #7c6cf0;
+    --u-type-info-rgb: 124, 108, 240;
+    --u-type-info-light: #f0edff;
+    --u-type-info-light-rgb: 240, 237, 255;
+
+    /* 文字与底色：暖灰 */
+    --u-main-color: #3a3335;
+    --u-content-color: #756b6d;
+    --u-tips-color: #9a8f91;
+    --u-light-color: #c8bfbd;
+    --u-border-color: #f0eae8;
+    --u-bg-color: #faf7f5;
+}

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>穿戴甲小程序 · 交互原型 v1.1</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:#eef1f5; color:#222; padding:24px 16px 40px;
+  }
+  h1 { text-align:center; font-size:22px; margin-bottom:4px; }
+  .sub { text-align:center; color:#888; font-size:12px; margin-bottom:18px; }
+
+  /* 顶部导航 */
+  .nav {
+    position:sticky; top:0; z-index:50; background:#eef1f5cc; backdrop-filter:blur(8px);
+    padding:8px 0 12px; margin-bottom:16px;
+  }
+  .nav-inner { max-width:1240px; margin:0 auto; display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .nav button {
+    font-size:11px; padding:6px 11px; border-radius:16px; border:1px solid #d6dde6;
+    background:#fff; color:#445; cursor:pointer; transition:.15s;
+  }
+  .nav button:hover { border-color:#2fb36a; color:#2fb36a; }
+  .nav button.on { background:#2fb36a; color:#fff; border-color:#2fb36a; }
+  .nav button.admin.on { background:#7c6cf0; border-color:#7c6cf0; }
+
+  .stage { max-width:1240px; margin:0 auto; display:flex; gap:30px; justify-content:center; flex-wrap:wrap; align-items:flex-start; }
+
+  /* 手机外框 */
+  .phone {
+    width:300px; height:600px; background:#fff; border-radius:34px;
+    border:9px solid #1c1f26; box-shadow:0 14px 34px rgba(0,0,0,.18);
+    position:relative; overflow:hidden; display:flex; flex-direction:column; flex:0 0 auto;
+  }
+  .statusbar {
+    height:26px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; font-size:10px; color:#333; flex:0 0 auto; background:#fff;
+  }
+  .navbar {
+    height:40px; display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:600; border-bottom:1px solid #f0f2f5; flex:0 0 auto; background:#fff; position:relative;
+  }
+  .navbar .back { position:absolute; left:14px; font-size:18px; color:#555; cursor:pointer; padding:0 4px;}
+  .body { flex:1; overflow-y:auto; background:#f7f8fa; }
+  .body::-webkit-scrollbar { width:0; }
+
+  .pad { padding:12px; }
+  .card { background:#fff; border-radius:12px; padding:12px; margin-bottom:10px; }
+  .row { display:flex; align-items:center; }
+  .between { justify-content:space-between; }
+  .thumb { width:100%; height:130px; border-radius:10px; background:linear-gradient(135deg,#f6d5e0,#e8c7f0); display:flex; align-items:center; justify-content:center; color:#b07; font-size:11px; margin-bottom:8px;}
+  .thumb.sm { width:60px; height:60px; margin:0 10px 0 0; flex:0 0 auto; font-size:9px;}
+  .tag { font-size:10px; padding:2px 8px; border-radius:10px; background:#fdeef3; color:#d1467e; margin-right:5px;}
+  .tag.gray{background:#eef1f5;color:#778;}
+  .tag.click { cursor:pointer; }
+  .price { color:#e0392b; font-weight:700; font-size:15px; }
+  .price small { font-size:10px; font-weight:400;}
+  .btn { display:block; text-align:center; background:#2fb36a; color:#fff; border-radius:20px; padding:10px; font-size:13px; font-weight:600; margin-top:8px; cursor:pointer; transition:.15s;}
+  .btn:hover { opacity:.9; }
+  .btn.outline { background:#fff; color:#2fb36a; border:1px solid #2fb36a;}
+  .btn.admin { background:#7c6cf0; }
+  .btn.warn { background:#e8a13a; }
+  .btn.dis { background:#c9ced6; cursor:not-allowed;}
+  .input { background:#f2f4f7; border-radius:8px; padding:9px 10px; font-size:12px; color:#99a; margin-bottom:8px;}
+  .input.filled { color:#333; }
+  .searchbar { background:#f2f4f7; border-radius:16px; padding:9px 12px; font-size:12px; color:#99a; display:flex; align-items:center;}
+  .cat { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .cat span { font-size:11px; background:#fff; border:1px solid #eceff3; border-radius:14px; padding:5px 11px; color:#556; cursor:pointer;}
+  .cat span.active { background:#2fb36a; color:#fff; border-color:#2fb36a;}
+  .tabbar { height:48px; background:#fff; border-top:1px solid #f0f2f5; display:flex; flex:0 0 auto;}
+  .tabbar div { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:9px; color:#aab; cursor:pointer;}
+  .tabbar div.on { color:#2fb36a; }
+  .tabbar .ico { font-size:15px; margin-bottom:1px;}
+  .section-h { font-size:12px; font-weight:600; margin:2px 0 8px; color:#334;}
+  .muted { color:#99a; font-size:11px;}
+  .divider { height:1px; background:#f0f2f5; margin:9px 0;}
+  .avatar { width:34px;height:34px;border-radius:50%;background:#e8c7f0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#7c3aed;margin-right:10px;flex:0 0 auto;}
+  .cell { display:flex; align-items:center; justify-content:space-between; padding:11px 0; font-size:12px; border-bottom:1px solid #f4f6f8; cursor:pointer;}
+  .cell:last-child { border-bottom:none;}
+  .cell .r { color:#aab; font-size:11px;}
+  .badge { font-size:9px; padding:1px 6px; border-radius:8px; margin-left:5px;}
+  .badge.pub{background:#e7f7ee;color:#2fb36a;}
+  .badge.own{background:#fdf3e2;color:#e8a13a;}
+  .badge.art{background:#efedfd;color:#7c6cf0;}
+  .badge.no{background:#fdeaea;color:#e05555;}
+  .sku { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .sku b { font-size:11px; font-weight:500; border:1px solid #e3e8ee; border-radius:8px; padding:5px 10px; color:#556; cursor:pointer;}
+  .sku b.on { border-color:#2fb36a; color:#2fb36a; background:#f1fbf5;}
+  .sku b.other { border-style:dashed; color:#e8a13a;}
+  .note { background:#fff8ec; border:1px dashed #e8a13a; border-radius:8px; padding:8px; font-size:11px; color:#a76; margin-top:8px;}
+  .footerbar { background:#fff; padding:10px 12px; display:flex; gap:8px; align-items:center; flex:0 0 auto; border-top:1px solid #f0f2f5;}
+  .footerbar .btn { flex:1; margin-top:0; }
+  .stat { display:flex; gap:8px; }
+  .stat div { flex:1; background:#fff; border-radius:10px; padding:10px 8px; text-align:center;}
+  .stat b { display:block; font-size:16px; color:#334;}
+  .stat small { font-size:9px; color:#99a;}
+  .stepitem { display:flex; margin-bottom:10px;}
+  .stepno { width:20px;height:20px;border-radius:50%;background:#7c6cf0;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;margin-right:8px;flex:0 0 auto;}
+  .stepimg { display:flex; gap:4px; margin-top:5px;}
+  .stepimg i { width:40px;height:40px;background:#eef1f5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#99a;font-style:normal;}
+  .stepimg i.vid{background:#efedfd;color:#7c6cf0;}
+  .perm-note { font-size:9px; color:#e05555; background:#fdeaea; border-radius:6px; padding:6px 8px; margin-top:6px; line-height:1.5;}
+  .role-banner { background:#efedfd; color:#5b4bd6; font-size:10px; padding:7px 10px; border-radius:8px; margin-bottom:8px;}
+  .checkbox { width:16px;height:16px;border:1.5px solid #2fb36a;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#2fb36a;margin-right:9px;flex:0 0 auto;}
+  .stepper { display:flex; align-items:center; gap:0; }
+  .stepper span { width:22px;height:22px;border:1px solid #e3e8ee;display:flex;align-items:center;justify-content:center;font-size:13px;color:#667;cursor:pointer;border-radius:5px;}
+  .stepper em { font-style:normal; padding:0 9px; font-size:12px; }
+  .timeline { position:relative; padding-left:16px; }
+  .timeline::before { content:""; position:absolute; left:5px; top:4px; bottom:4px; width:2px; background:#e3e8ee; }
+  .tl-item { position:relative; margin-bottom:12px; font-size:11px; }
+  .tl-item::before { content:""; position:absolute; left:-15px; top:3px; width:8px;height:8px;border-radius:50%;background:#2fb36a; }
+  .tl-item.pending::before { background:#c9ced6; }
+  .tl-item b { display:block; font-size:11px; color:#334; }
+  .radio { width:16px;height:16px;border-radius:50%;border:1.5px solid #c9ced6;margin-right:9px;flex:0 0 auto;}
+  .radio.on { border:5px solid #2fb36a; }
+</style>
+</head>
+<body>
+
+<h1>穿戴甲售卖与管理小程序 · 交互原型</h1>
+<p class="sub">v1.1 ｜ 点击屏内元素或顶部导航可跳转 ｜ 私有字段均已标注可见性</p>
+
+<!-- ============ 顶部导航 ============ -->
+<div class="nav">
+  <div class="nav-inner" id="navBar"></div>
+</div>
+
+<!-- ============ 舞台 ============ -->
+<div class="stage" id="stage"></div>
+
+<script>
+/* ================== 页面定义 ================== */
+const PAGES = {
+
+  /* ---------- 用户端 ---------- */
+  home: {
+    title:"首页", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="searchbar" onclick="go('list')">🔍 搜索款式 / 标签</div>
+        <div class="thumb" onclick="go('detail')">首页轮播 Banner（点击进商品）</div>
+        <div class="section-h">分类</div>
+        <div class="cat">
+          <span class="active" onclick="go('list')">全部</span>
+          <span onclick="go('list')">法式</span><span onclick="go('list')">猫眼</span>
+          <span onclick="go('list')">渐变</span><span onclick="go('list')">手绘</span>
+        </div>
+        <div class="section-h" style="margin-top:12px">热销推荐</div>
+        <div class="card" onclick="go('detail')" style="cursor:pointer">
+          <div class="row"><div class="thumb sm">商品图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div style="margin-top:4px"><span class="tag">热卖</span><span class="tag gray">短圆</span></div>
+              <div class="row between" style="margin-top:6px">
+                <span class="price">¥68<small>/副</small></span><span class="muted">已售320</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" onclick="go('detail')" style="cursor:pointer">
+          <div class="row"><div class="thumb sm" style="background:linear-gradient(135deg,#d5e0f6,#c7d0f0)">商品图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">碎钻渐变长梯</div>
+              <div style="margin-top:4px"><span class="tag">新品</span><span class="tag gray">长梯</span></div>
+              <div class="row between" style="margin-top:6px">
+                <span class="price">¥88<small>/副</small></span><span class="muted">已售96</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:0
+  },
+
+  list: {
+    title:"搜索结果", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="searchbar">🔍 猫眼</div>
+        <div class="cat" style="margin-top:8px">
+          <span class="active">综合</span><span>销量</span><span>上新</span><span>价格</span>
+        </div>
+        <div class="card" style="margin-top:10px" onclick="go('detail')">
+          <div class="row"><div class="thumb sm">图</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div style="margin-top:4px"><span class="tag">热卖</span></div>
+              <div class="row between" style="margin-top:6px"><span class="price">¥68<small>/副</small></span><span class="muted">已售320</span></div>
+            </div></div>
+        </div>
+        <div class="card" onclick="go('detail')">
+          <div class="row"><div class="thumb sm" style="background:linear-gradient(135deg,#f6e0d5,#f0c7c7)">图</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:600">焦糖猫眼短圆</div>
+              <div style="margin-top:4px"><span class="tag gray">短圆</span></div>
+              <div class="row between" style="margin-top:6px"><span class="price">¥58<small>/副</small></span><span class="muted">已售210</span></div>
+            </div></div>
+        </div>
+        <div class="muted" style="text-align:center;padding:10px">— 上拉加载更多 · 分页 —</div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:1
+  },
+
+  detail: {
+    title:"商品详情", role:"用户端",
+    html:`
+      <div class="thumb" style="border-radius:0;height:150px;margin:0">图片轮播 + ▶ 视频</div>
+      <div class="pad">
+        <div class="row between"><span class="price" style="font-size:19px">¥68<small>/副</small></span><span class="muted">已售320</span></div>
+        <div style="font-size:14px;font-weight:600;margin:6px 0">奶油法式猫眼</div>
+        <div class="muted">一副通常 10/12 片 · 含工具包可选</div>
+        <div class="divider"></div>
+        <div class="section-h">尺码</div>
+        <div class="sku"><b>S</b><b class="on">M</b><b>L</b><b class="other" onclick="go('order')">其他</b></div>
+        <div class="section-h" style="margin-top:10px">甲型</div>
+        <div class="sku"><b class="on">短圆</b><b>中长</b><b>长梯</b><b class="other" onclick="go('order')">其他</b></div>
+        <div class="note">选择「其他」时，下单页需填写定制备注</div>
+        <div class="divider"></div>
+        <div class="section-h">用户评价 <span class="muted">（先发先显，管理员可隐藏）</span></div>
+        <div class="card" style="margin:0">
+          <div class="row"><div class="avatar">U</div><div style="font-size:11px">★★★★★ 很好看，贴合！<br><span class="muted">图片 / 视频晒单</span></div></div>
+        </div>
+      </div>`,
+    footer:`<div class="btn outline" onclick="go('user')">收藏</div>
+            <div class="btn outline" onclick="go('cart')">加购</div>
+            <div class="btn" onclick="go('order')">立即购买</div>`
+  },
+
+  cart: {
+    title:"购物车", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="row between" style="margin-bottom:10px">
+          <span class="muted">共 3 件</span>
+          <span class="muted" style="color:#e05555">管理</span>
+        </div>
+        <div class="card">
+          <div class="row">
+            <span class="checkbox">✓</span>
+            <div class="thumb sm">图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">尺码 M · 甲型 短圆</div>
+              <div class="row between" style="margin-top:6px">
+                <span class="price" style="font-size:13px">¥68</span>
+                <div class="stepper"><span>−</span><em>1</em><span>＋</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <span class="checkbox">✓</span>
+            <div class="thumb sm" style="background:linear-gradient(135deg,#d5e0f6,#c7d0f0)">图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">碎钻渐变长梯</div>
+              <div class="muted" style="margin-top:3px">尺码 L · 甲型 长梯 · <span style="color:#e8a13a">其他</span></div>
+              <div class="row between" style="margin-top:6px">
+                <span class="price" style="font-size:13px">¥88</span>
+                <div class="stepper"><span>−</span><em>2</em><span>＋</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="note">已选商品共 3 副，满足满 2 副包邮</div>
+      </div>`,
+    footer:`<span class="muted">合计 <span class="price">¥244</span></span>
+            <div class="btn" style="flex:0 0 130px" onclick="go('order')">去结算(3)</div>`,
+    tab:["home","category","cart","user"], tabOn:2
+  },
+
+  order: {
+    title:"确认订单", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="card">
+          <div style="font-size:12px;font-weight:600">📍 收货地址</div>
+          <div class="muted" style="margin-top:5px">张三 138****0000 · 福建省福州市…</div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <div class="thumb sm">图</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">尺码 M · 甲型 短圆 × 2 副</div>
+              <div class="row between" style="margin-top:5px">
+                <span class="price" style="font-size:13px">¥136</span><span class="muted">×2</span>
+              </div>
+            </div>
+          </div>
+          <div class="note">已选「其他」规格，请填写定制备注（必填提示）</div>
+          <div class="input" style="margin-top:6px">定制备注：如甲床尺寸、图案微调…</div>
+        </div>
+        <div class="card">
+          <div class="cell">商品金额 <span class="r">¥136</span></div>
+          <div class="cell">运费 <span class="r" style="color:#2fb36a">满 2 副包邮 ¥0</span></div>
+          <div class="cell">合计 <span class="price" style="font-size:14px">¥136</span></div>
+        </div>
+      </div>`,
+    footer:`<span class="muted">合计 <span class="price">¥136</span></span>
+            <div class="btn" style="flex:0 0 120px" onclick="go('orders')">微信支付</div>`
+  },
+
+  orders: {
+    title:"我的订单", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="cat"><span class="active">全部</span><span>待付款</span><span>待发货</span><span>待收货</span><span>已完成</span></div>
+        <div class="card" style="margin-top:10px" onclick="go('orderDetail')">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261109-01</span><span class="tag">待发货</span></div>
+          <div class="row" style="margin-top:8px"><div class="thumb sm">图</div>
+            <div style="flex:1"><div style="font-size:12px">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">M · 短圆 ×2 副</div></div>
+            <span class="price" style="font-size:13px">¥136</span>
+          </div>
+        </div>
+        <div class="card" onclick="go('orderDetail')">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261108-12</span><span class="tag gray">已完成</span></div>
+          <div class="row" style="margin-top:8px"><div class="thumb sm" style="background:linear-gradient(135deg,#d5e0f6,#c7d0f0)">图</div>
+            <div style="flex:1"><div style="font-size:12px">碎钻渐变长梯</div>
+              <div class="muted" style="margin-top:3px">L · 长梯 ×1 副 · 运费 ¥8</div></div>
+            <span class="price" style="font-size:13px">¥96</span>
+          </div>
+        </div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:3
+  },
+
+  orderDetail: {
+    title:"订单详情", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="card" style="background:#e7f7ee">
+          <div style="font-size:13px;font-weight:600;color:#2fb36a">待发货</div>
+          <div class="muted" style="margin-top:4px">商家正在备货，预计 48 小时内发出</div>
+        </div>
+        <div class="card">
+          <div class="row"><div class="thumb sm">图</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:600">奶油法式猫眼</div>
+              <div class="muted" style="margin-top:3px">尺码 M · 甲型 短圆 × 2 副</div>
+              <div class="row between" style="margin-top:5px"><span class="price" style="font-size:13px">¥136</span></div>
+            </div></div>
+          <div class="note">定制备注：甲床偏宽，请按备注调整</div>
+        </div>
+        <div class="card">
+          <div class="cell">商品金额 <span class="r">¥136</span></div>
+          <div class="cell">运费 <span class="r" style="color:#2fb36a">满2副包邮 ¥0</span></div>
+          <div class="cell">实付款 <span class="price" style="font-size:14px">¥136</span></div>
+        </div>
+        <div class="card">
+          <div class="section-h">物流信息</div>
+          <div class="timeline">
+            <div class="tl-item pending"><b>暂无物流信息</b><span class="muted">发货后更新</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="cell" onclick="go('afterSale')">申请售后 / 联系客服协商 <span class="r">›</span></div>
+          <div class="cell">复制订单号 <span class="r">›</span></div>
+        </div>
+      </div>`,
+    footer:`<div class="btn outline" onclick="go('afterSale')">联系客服</div>
+            <div class="btn" onclick="go('orders')">确认收货</div>`
+  },
+
+  afterSale: {
+    title:"售后协商", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="role-banner" style="background:#fdf3e2;color:#a76">MVP 仅提供「联系客服协商」，不做线上退款流程</div>
+        <div class="card">
+          <div class="section-h">选择问题类型</div>
+          <div class="cell"><span class="radio on"></span>尺寸不合适</div>
+          <div class="cell"><span class="radio"></span>商品破损 / 瑕疵</div>
+          <div class="cell"><span class="radio"></span>与描述不符</div>
+          <div class="cell"><span class="radio"></span>其他问题</div>
+        </div>
+        <div class="card">
+          <div class="section-h">问题描述</div>
+          <div class="input" style="height:64px">请描述遇到的问题，便于客服快速处理…</div>
+          <div class="section-h">上传凭证（图片/视频）</div>
+          <div class="stepimg"><i>＋图</i><i>＋图</i><i class="vid">＋视频</i></div>
+        </div>
+        <div class="card">
+          <div class="muted">关联订单：#20261109-01 · 奶油法式猫眼 ×2 副</div>
+        </div>
+        <div class="note">提交后将跳转客服会话，由店主人工协商处理</div>
+      </div>`,
+    footer:`<div class="btn" onclick="alert('已提交，正在跳转客服会话…')">提交并联系客服</div>`
+  },
+
+  user: {
+    title:"我的", role:"用户端",
+    html:`
+      <div class="pad">
+        <div class="card row">
+          <div class="avatar">U</div>
+          <div><div style="font-size:13px;font-weight:600">微信用户</div><div class="muted">点击授权登录</div></div>
+        </div>
+        <div class="card">
+          <div class="cell" onclick="go('orders')">我的订单 <span class="r">全部 ›</span></div>
+          <div class="cell">我的收藏 <span class="r">服务端同步 ›</span></div>
+          <div class="cell">收货地址 <span class="r">›</span></div>
+        </div>
+        <div class="card">
+          <div class="cell">尺码测量指引 <span class="r">静态图文 ›</span></div>
+          <div class="cell">用户协议 <span class="r">占位 ›</span></div>
+          <div class="cell">隐私政策 <span class="r">占位 ›</span></div>
+          <div class="cell" onclick="go('afterSale')">联系客服 <span class="r">›</span></div>
+        </div>
+        <div class="card" style="border:1px dashed #dde3ea;text-align:center">
+          <div class="muted">管理端入口：扫码进入（不在此暴露）</div>
+        </div>
+      </div>`,
+    tab:["home","category","cart","user"], tabOn:3
+  },
+
+  /* ---------- 管理端 ---------- */
+  adminLogin: {
+    title:"管理端登录", role:"管理端",
+    html:`
+      <div class="pad" style="padding-top:30px;text-align:center">
+        <div style="width:120px;height:120px;margin:0 auto;border:3px dashed #7c6cf0;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#7c6cf0;font-size:12px">扫码区</div>
+        <div style="font-size:13px;font-weight:600;margin-top:16px">请扫描管理入口码</div>
+        <div class="muted" style="margin-top:6px">一人一码 · 停用后立即失效</div>
+        <div class="input" style="margin-top:18px;text-align:left">校验身份中…</div>
+        <div class="role-banner" style="text-align:left;margin-top:14px">当前身份：美甲师（只读制作档案，不可改价/上下架）</div>
+        <div class="perm-note" style="text-align:left">非授权角色扫码 → 校验失败，返回首页</div>
+        <div class="btn admin" style="margin-top:16px" onclick="go('adminHome')">模拟扫码成功进入</div>
+      </div>`
+  },
+
+  adminHome: {
+    title:"管理后台", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="role-banner">当前身份：店主（owner）· 全部权限</div>
+        <div class="stat">
+          <div><b>128</b><small>在售商品</small></div>
+          <div><b>36</b><small>待发货</small></div>
+          <div><b>7</b><small>待处理售后</small></div>
+        </div>
+        <div class="card" style="margin-top:10px">
+          <div class="cell">商品管理 <span class="r">›</span></div>
+          <div class="cell" onclick="go('archiveEdit')">制作档案（私有）<span class="r">›</span></div>
+          <div class="cell" onclick="go('adminOrders')">订单管理 <span class="r">›</span></div>
+          <div class="cell" onclick="go('adminReview')">评价管理 <span class="r">›</span></div>
+        </div>
+        <div class="card">
+          <div class="cell" onclick="go('adminReview')">运费规则配置 <span class="r">满2副包邮 / 固定邮费 ›</span></div>
+          <div class="cell" onclick="go('adminAccounts')">账号与入口码 <span class="r">发码 / 停用 ›</span></div>
+        </div>
+      </div>`
+  },
+
+  archiveEdit: {
+    title:"制作档案", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="role-banner">私有字段 · 仅管理端接口下发，普通用户不可见</div>
+        <div class="section-h">材料清单</div>
+        <div class="card">
+          <div class="input filled">甲片型号：短圆 M 号 ×24</div>
+          <div class="input filled">甲油胶：某品牌 #012 裸粉</div>
+          <div class="input filled">饰品：碎钻 / 贝壳片 若干</div>
+          <div class="btn outline" style="margin-top:4px">+ 添加材料行</div>
+        </div>
+        <div class="section-h">制作步骤（多图 + 短视频，可排序）</div>
+        <div class="card">
+          <div class="stepitem"><div class="stepno">1</div>
+            <div style="flex:1"><div style="font-size:12px">打磨甲面、涂底胶</div>
+              <div class="stepimg"><i>图</i><i>图</i><i class="vid">▶视频</i></div></div></div>
+          <div class="stepitem"><div class="stepno">2</div>
+            <div style="flex:1"><div style="font-size:12px">上色、猫眼吸磁</div>
+              <div class="stepimg"><i>图</i><i>图</i></div></div></div>
+          <div class="btn outline">+ 添加步骤</div>
+        </div>
+        <div class="section-h">成本核算 <span class="badge own">仅店主</span></div>
+        <div class="card">
+          <div class="input filled">材料成本：¥18 / 耗时：2h / 建议售价：¥68</div>
+        </div>
+        <div class="btn admin" onclick="go('archiveRead')">保存并预览美甲师视图</div>
+      </div>`
+  },
+
+  archiveRead: {
+    title:"制作档案（只读）", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="role-banner">当前身份：美甲师 · 仅可查看材料与步骤</div>
+        <div class="section-h">材料清单</div>
+        <div class="card">
+          <div class="cell">甲片型号 <span class="r">短圆 M 号 ×24</span></div>
+          <div class="cell">甲油胶 <span class="r">#012 裸粉</span></div>
+          <div class="cell">饰品 <span class="r">碎钻 / 贝壳片</span></div>
+        </div>
+        <div class="section-h">制作步骤</div>
+        <div class="card">
+          <div class="stepitem"><div class="stepno">1</div>
+            <div style="flex:1"><div style="font-size:12px">打磨甲面、涂底胶</div>
+              <div class="stepimg"><i>图</i><i>图</i><i class="vid">▶</i></div></div></div>
+          <div class="stepitem"><div class="stepno">2</div>
+            <div style="flex:1"><div style="font-size:12px">上色、猫眼吸磁</div>
+              <div class="stepimg"><i>图</i><i>图</i></div></div></div>
+        </div>
+        <div class="perm-note">成本字段不展示 · 价格/上下架按钮不可见 · 改价接口返回 403</div>
+      </div>`,
+    footer:`<div class="btn dis">只读模式</div>`
+  },
+
+  adminAccounts: {
+    title:"账号与入口码", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="card">
+          <div class="row between">
+            <div><div style="font-size:12px;font-weight:600">美甲师 A</div><div class="muted">角色：artist</div></div>
+            <span class="badge art">启用中</span>
+          </div>
+          <div class="row between" style="margin-top:8px">
+            <div class="muted">入口码：NM-8F2K</div>
+            <span class="tag click" onclick="alert('已停用，该码立即失效')">停用</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between">
+            <div><div style="font-size:12px;font-weight:600">美甲师 B</div><div class="muted">角色：artist</div></div>
+            <span class="badge no">已停用</span>
+          </div>
+          <div class="muted" style="margin-top:8px">码已失效，扫码校验失败</div>
+        </div>
+        <div class="btn admin" onclick="alert('已生成新入口码（一人一码）')">+ 生成新入口码（一人一码）</div>
+        <div class="perm-note">多主体场景：入口码与 merchantId 绑定，数据按主体隔离</div>
+      </div>`
+  },
+
+  adminOrders: {
+    title:"订单管理", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="cat"><span class="active">全部</span><span>待发货</span><span>待收货</span><span>售后</span></div>
+        <div class="card" style="margin-top:10px">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261109-01</span><span class="tag">待发货</span></div>
+          <div class="muted" style="margin-top:5px">奶油法式猫眼 · M · 短圆 ×2 副</div>
+          <div class="note" style="margin-top:6px">定制备注：甲床偏宽，请按备注调整</div>
+          <div class="row between" style="margin-top:8px">
+            <span class="price" style="font-size:13px">¥136</span>
+            <span class="tag click" onclick="alert('已填入物流单号，订单状态更新为待收货')">填物流单号 ›</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between"><span style="font-size:12px;font-weight:600">订单 #20261108-12</span><span class="tag gray">已完成</span></div>
+          <div class="muted" style="margin-top:5px">碎钻渐变长梯 · L · 长梯 ×1 副 · 运费 ¥8</div>
+        </div>
+      </div>`
+  },
+
+  adminReview: {
+    title:"评价与规则", role:"管理端",
+    html:`
+      <div class="pad">
+        <div class="section-h">评价管理（先发先显）</div>
+        <div class="card">
+          <div class="row between">
+            <div style="font-size:11px">★★★★★ 很好看<br><span class="muted">图片 / 视频晒单</span></div>
+            <span class="tag click" onclick="alert('该评价已隐藏，用户端不再展示')">隐藏</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row between">
+            <div style="font-size:11px">★★★★☆ 尺寸合适<br><span class="muted">图片</span></div>
+            <span class="tag gray click" onclick="alert('该评价已删除')">删除</span>
+          </div>
+        </div>
+        <div class="section-h" style="margin-top:10px">运费规则</div>
+        <div class="card">
+          <div class="cell">满包邮阈值 <span class="r">2 副</span></div>
+          <div class="cell">固定邮费 <span class="r">¥ 8</span></div>
+          <div class="input filled" style="margin-top:6px">修改后立即生效</div>
+        </div>
+      </div>`
+  }
+};
+
+/* ================== 渲染逻辑 ================== */
+const NAV_ORDER = [
+  ["home","首页"],["list","搜索列表"],["detail","商品详情"],["cart","购物车"],
+  ["order","确认订单"],["orders","我的订单"],["orderDetail","订单详情"],["afterSale","售后协商"],
+  ["user","我的"],["adminLogin","管理登录"],["adminHome","管理后台"],["archiveEdit","档案编辑"],
+  ["archiveRead","档案只读"],["adminAccounts","账号与码"],["adminOrders","订单管理"],["adminReview","评价规则"]
+];
+
+let current = "home";
+const stage = document.getElementById("stage");
+const navBar = document.getElementById("navBar");
+
+function isAdminPage(key){ return key.startsWith("admin") || key==="archiveEdit" || key==="archiveRead"; }
+
+function renderNav(){
+  navBar.innerHTML = NAV_ORDER.map(([k,label])=>{
+    const cls = (k===current?"on ":"") + (isAdminPage(k)?"admin":"");
+    return `<button class="${cls}" onclick="go('${k}')">${label}</button>`;
+  }).join("");
+}
+
+function renderTabs(tab, on){
+  if(!tab) return "";
+  const icons=["⌂","▤","🛒","☺"], names=["首页","分类","购物车","我的"];
+  return `<div class="tabbar">` + tab.map((_,i)=>{
+    const onCls = i===on?"on":"";
+    const target = ["home","list","cart","user"][i];
+    return `<div class="${onCls}" onclick="go('${target}')"><span class="ico">${icons[i]}</span>${names[i]}</div>`;
+  }).join("") + `</div>`;
+}
+
+function render(){
+  const p = PAGES[current];
+  if(!p) return;
+  const tabOn = p.tabOn !== undefined ? p.tabOn : -1;
+  stage.innerHTML = `
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>●●● ⚡</span></div>
+      <div class="navbar">
+        ${p.role==="管理端"?'<span class="back" onclick="go(\'adminHome\')">‹</span>':''}
+        ${p.title}
+      </div>
+      <div class="body">${p.html}</div>
+      ${p.footer?`<div class="footerbar">${p.footer}</div>`:""}
+      ${p.tab?renderTabs(p.tab, tabOn):""}
+    </div>
+  `;
+  renderNav();
+}
+
+function go(key){
+  if(!PAGES[key]) return;
+  current = key;
+  render();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* 初始化 */
+render();
+</script>
+
+</body>
+</html>

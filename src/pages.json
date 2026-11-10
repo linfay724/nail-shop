@@ -66,6 +66,30 @@
 					}
 				},
 				{
+					"path": "review/edit",
+					"style": {
+						"navigationBarTitleText": "发表评价"
+					}
+				},
+				{
+					"path": "media/video",
+					"style": {
+						"navigationBarTitleText": "视频"
+					}
+				},
+				{
+					"path": "legal/terms",
+					"style": {
+						"navigationBarTitleText": "用户协议"
+					}
+				},
+				{
+					"path": "legal/privacy",
+					"style": {
+						"navigationBarTitleText": "隐私政策"
+					}
+				},
+				{
 					"path": "address/list",
 					"style": {
 						"navigationBarTitleText": "收货地址"
@@ -97,7 +121,7 @@
 				{
 					"path": "auth/index",
 					"style": {
-						"navigationBarTitleText": "管理端鉴权"
+						"navigationBarTitleText": "管理端入口"
 					}
 				},
 				{
@@ -119,6 +143,12 @@
 					}
 				},
 				{
+					"path": "craft/list",
+					"style": {
+						"navigationBarTitleText": "制作资料"
+					}
+				},
+				{
 					"path": "craft/edit",
 					"style": {
 						"navigationBarTitleText": "制作档案"
@@ -135,6 +165,18 @@
 					"style": {
 						"navigationBarTitleText": "订单处理"
 					}
+				},
+				{
+					"path": "review/rule",
+					"style": {
+						"navigationBarTitleText": "评价与规则"
+					}
+				},
+				{
+					"path": "staff/list",
+					"style": {
+						"navigationBarTitleText": "账号管理"
+					}
 				}
 			]
 		}
@@ -146,8 +188,8 @@
 		}
 	},
 	"tabBar": {
-		"color": "#b9b4cc",
-		"selectedColor": "#ff8fb1",
+		"color": "#9a8f91",
+		"selectedColor": "#8c3b4a",
 		"backgroundColor": "#ffffff",
 		"borderStyle": "white",
 		"list": [
@@ -159,7 +201,7 @@
 			},
 			{
 				"pagePath": "pages/product/list",
-				"text": "商品",
+				"text": "分类",
 				"iconPath": "static/tab-product.png",
 				"selectedIconPath": "static/tab-product-active.png"
 			},
@@ -168,12 +210,6 @@
 				"text": "购物车",
 				"iconPath": "static/tab-cart.png",
 				"selectedIconPath": "static/tab-cart-active.png"
-			},
-			{
-				"pagePath": "pages/order/list",
-				"text": "订单",
-				"iconPath": "static/tab-order.png",
-				"selectedIconPath": "static/tab-order-active.png"
 			},
 			{
 				"pagePath": "pages/profile/index",
