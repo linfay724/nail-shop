@@ -1,4 +1,4 @@
-import type { PagedResult, PublicProduct, PublicProductDetail } from './contract'
+import type { PagedResult, PublicProduct, PublicProductDetail, ProductStyle, Shape, Size } from './contract'
 import { request } from './transport'
 
 /** 列表页排序：综合 / 销量 / 上新 / 价格 */
@@ -7,6 +7,12 @@ export type ProductSort = 'default' | 'sales' | 'newest' | 'price'
 export interface ProductQuery {
   keyword?: string
   sort?: ProductSort
+  /** 尺码筛选，命中任一已配置组合 */
+  size?: Size
+  /** 甲型筛选，命中任一已配置组合 */
+  shape?: Shape
+  /** 风格筛选 */
+  style?: ProductStyle
   page?: number
   pageSize?: number
 }

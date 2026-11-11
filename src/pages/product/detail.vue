@@ -1,11 +1,38 @@
 <template>
   <view class="detail">
     <template v-if="product">
-      <u-swiper :list="images" height="600" :radius="0" />
-
-      <view v-if="product.video" class="video-wrap">
-        <video class="product-video" :src="product.video" :poster="product.cover" controls />
-      </view>
+      <swiper
+        class="gallery"
+        circular
+        :autoplay="false"
+        :indicator-dots="true"
+        indicator-color="rgba(255, 255, 255, 0.4)"
+        indicator-active-color="#ffffff"
+        @change="onGalleryChange"
+      >
+        <swiper-item v-if="product.video">
+          <video
+            id="gallery-video"
+            class="gallery-media"
+            :src="product.video"
+            :poster="product.cover"
+            autoplay
+            controls
+            object-fit="cover"
+          />
+        </swiper-item>
+        <swiper-item
+          v-for="(img, index) in product.images"
+          :key="img"
+        >
+          <image
+            class="gallery-media"
+            :src="img"
+            mode="aspectFill"
+            @click="previewImage(index)"
+          />
+        </swiper-item>
+      </swiper>
 
       <view class="info">
         <view class="row">
@@ -19,10 +46,17 @@
         <text class="name">{{ product.name }}</text>
         <view class="tags">
           <text class="tag">{{ product.style }}</text>
-          <text v-for="tag in product.tags" :key="tag" class="tag">{{ tag }}</text>
+          <text
+            v-for="tag in product.tags"
+            :key="tag"
+            class="tag"
+          >{{ tag }}</text>
         </view>
         <text class="unit">{{ unitText }}</text>
-        <text v-if="!product.isAccessory" class="accessory-tip">
+        <text
+          v-if="!product.isAccessory"
+          class="accessory-tip"
+        >
           含工具包可选，工具包在分类页单独购买
         </text>
       </view>
@@ -30,32 +64,60 @@
       <view class="reviews">
         <view class="reviews-head">
           <text class="reviews-title">用户评价（{{ reviewCount }}）</text>
-          <text class="reviews-score">{{ averageText }}</text>
+          <text v-if="reviewCount > 0" class="reviews-all" @click="openAllReviews">
+            查看全部 ›
+          </text>
+          <text v-else class="reviews-score">{{ averageText }}</text>
         </view>
 
-        <view v-if="reviews.length === 0" class="reviews-empty">暂无评价</view>
-        <review-card v-for="review in reviews" :key="review.id" :review="review" />
+        <view
+          v-if="reviews.length === 0"
+          class="reviews-empty"
+        >暂无评价</view>
+        <review-card
+          v-for="review in reviews"
+          :key="review.id"
+          :review="review"
+        />
 
-        <text v-if="reviewHasMore" class="more" @click="loadMoreReviews">加载更多评价</text>
+        <text
+          v-if="reviewHasMore"
+          class="more"
+          @click="loadMoreReviews"
+        >加载更多评价</text>
       </view>
 
       <view class="bottom-bar">
-        <text class="fav" @click="toggleFavorite">{{ favorite ? '已收藏' : '收藏' }}</text>
+        <text
+          class="fav"
+          @click="toggleFavorite"
+        >{{ favorite ? '已收藏' : '收藏' }}</text>
         <u-button
           custom-style="flex: 1; color: #8c3b4a; border-color: #e8b4b8; background-color: #ffffff"
           @click="onPrimary('cart')"
         >
           加入购物车
         </u-button>
-        <u-button type="primary" custom-style="flex: 1; margin-left: 20rpx" @click="onPrimary('buy')">
+        <u-button
+          type="primary"
+          custom-style="flex: 1; margin-left: 20rpx"
+          @click="onPrimary('buy')"
+        >
           立即购买
         </u-button>
       </view>
 
-      <sku-picker v-model:show="skuVisible" :product="product" @confirm="handleSkuConfirm" />
+      <sku-picker
+        v-model:show="skuVisible"
+        :product="product"
+        @confirm="handleSkuConfirm"
+      />
     </template>
 
-    <view v-else class="loading">加载中…</view>
+    <view
+      v-else
+      class="loading"
+    >加载中…</view>
 
     <login-sheet />
   </view>
@@ -67,7 +129,12 @@ import { onLoad } from '@dcloudio/uni-app'
 import { productApi } from '@/api/product'
 import { reviewApi } from '@/api/review'
 import { toastError } from '@/api/transport'
-import type { OrderItem, ProductSku, PublicProductDetail, PublicReview } from '@/api/contract'
+import type {
+  OrderItem,
+  ProductSku,
+  PublicProductDetail,
+  PublicReview,
+} from '@/api/contract'
 import PriceTag from '@/components/price-tag.vue'
 import SkuPicker from '@/components/sku-picker.vue'
 import ReviewCard from '@/components/review-card.vue'
@@ -92,8 +159,9 @@ const reviewHasMore = ref(false)
 const reviewCount = ref(0)
 const reviewAverage = ref(0)
 
-const images = computed(() => (product.value?.images ?? []).map((image) => ({ image })))
-const favorite = computed(() => (product.value ? favoriteStore.isFavorite(product.value.id) : false))
+const favorite = computed(() =>
+  product.value ? favoriteStore.isFavorite(product.value.id) : false
+)
 const unitText = computed(() => {
   if (!product.value) {
     return ''
@@ -106,7 +174,7 @@ const unitText = computed(() => {
     : `单位：${product.value.unit} · 片数以实物为准`
 })
 const averageText = computed(() =>
-  reviewCount.value > 0 ? `${reviewAverage.value} 分` : '暂无评分',
+  reviewCount.value > 0 ? `${reviewAverage.value} 分` : '暂无评分'
 )
 
 onLoad(async (options) => {
@@ -147,6 +215,27 @@ async function loadReviews(reset = false): Promise<void> {
 
 function loadMoreReviews(): void {
   void loadReviews(false)
+}
+
+/** 滑到其他图片时暂停视频，避免后台继续播放 */
+function onGalleryChange(event: { detail: { current: number } }): void {
+  if (event.detail.current !== 0) {
+    uni.createVideoContext('gallery-video')?.pause()
+  }
+}
+
+function previewImage(index: number): void {
+  if (!product.value) {
+    return
+  }
+  uni.previewImage({ urls: product.value.images, current: index })
+}
+
+function openAllReviews(): void {
+  if (!product.value) {
+    return
+  }
+  uni.navigateTo({ url: `/pages-user/product/reviews?id=${product.value.id}` })
 }
 
 function openSku(mode: 'cart' | 'buy'): void {
@@ -194,7 +283,10 @@ function addAccessory(mode: 'cart' | 'buy'): void {
   })
 }
 
-function handleSkuConfirm(payload: { sku: ProductSku; quantity: number }): void {
+function handleSkuConfirm(payload: {
+  sku: ProductSku
+  quantity: number
+}): void {
   if (!product.value) {
     return
   }
@@ -238,7 +330,6 @@ function toggleFavorite(): void {
     }
   })
 }
-
 </script>
 
 <style lang="scss" scoped>
@@ -248,18 +339,14 @@ function toggleFavorite(): void {
   background-color: $app-color-bg;
 }
 
-.video-wrap {
-  margin: 20rpx 20rpx 0;
-  padding: 16rpx;
-  background-color: $app-color-white;
-  border: 1rpx solid $app-color-border;
-  border-radius: $app-radius-lg;
+.gallery {
+  width: 100%;
+  height: 600rpx;
 }
 
-.product-video {
+.gallery-media {
   width: 100%;
-  height: 400rpx;
-  border-radius: $app-radius-base;
+  height: 600rpx;
 }
 
 .info {
@@ -344,6 +431,11 @@ function toggleFavorite(): void {
 .reviews-score {
   font-size: 22rpx;
   color: #d6a34f;
+}
+
+.reviews-all {
+  font-size: 22rpx;
+  color: $app-color-primary-dark;
 }
 
 .reviews-empty {

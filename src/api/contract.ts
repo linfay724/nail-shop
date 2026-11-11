@@ -1,16 +1,18 @@
-export type ProductStyle = '日式' | '法式' | '甜美' | '复古'
+export type ProductStyle = '素甲' | '钻款' | '模具' | '日式' | '法式' | '甜美' | '复古'
 
 /** 尺码枚举，OTHER 表示需要定制备注的「其他」 */
-export type Size = 'S' | 'M' | 'L' | 'OTHER'
+export type Size = 'XS' | 'S' | 'M' | 'L' | 'OTHER'
 /** 甲型枚举，OTHER 表示需要定制备注的「其他」 */
 export type Shape = 'SHORT_ROUND' | 'MEDIUM' | 'LONG_TAPER' | 'OTHER'
 
 export type Role = 'owner' | 'artist'
 
-export const SIZE_OPTIONS: Size[] = ['S', 'M', 'L', 'OTHER']
+export const SIZE_OPTIONS: Size[] = ['XS', 'S', 'M', 'L', 'OTHER']
 export const SHAPE_OPTIONS: Shape[] = ['SHORT_ROUND', 'MEDIUM', 'LONG_TAPER', 'OTHER']
+export const STYLE_OPTIONS: ProductStyle[] = ['素甲','钻款', '模具', '日式', '法式', '甜美', '复古']
 
 export const SIZE_LABELS: Record<Size, string> = {
+  XS: 'XS',
   S: 'S',
   M: 'M',
   L: 'L',
@@ -23,8 +25,6 @@ export const SHAPE_LABELS: Record<Shape, string> = {
   LONG_TAPER: '长梯',
   OTHER: '其他',
 }
-
-export const STYLE_OPTIONS: ProductStyle[] = ['日式', '法式', '甜美', '复古']
 
 /** 尺码 × 甲型的组合规格，仅店主配置过的组合才存在 */
 export interface ProductSku {

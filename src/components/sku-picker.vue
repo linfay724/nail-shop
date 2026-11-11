@@ -1,5 +1,5 @@
 <template>
-  <u-popup :show="show" mode="bottom" :border-radius="24" @close="close">
+  <u-popup v-model="popupVisible" mode="bottom" :border-radius="24" @close="close">
     <view class="sku-picker">
       <view class="header">
         <image class="cover" :src="product?.cover" mode="aspectFill" />
@@ -47,16 +47,8 @@
       </view>
 
       <view class="actions">
-        <u-button :disabled="!purchasable" custom-style="flex: 1" @click="confirm('cart')">
-          加入购物车
-        </u-button>
-        <u-button
-          type="primary"
-          :disabled="!purchasable"
-          custom-style="flex: 1; margin-left: 20rpx"
-          @click="confirm('buy')"
-        >
-          立即购买
+        <u-button type="primary" :disabled="!purchasable" custom-style="flex: 1" @click="confirm">
+          确认
         </u-button>
       </view>
     </view>
@@ -80,8 +72,14 @@ import PriceTag from '@/components/price-tag.vue'
 const props = defineProps<{ show: boolean; product: PublicProductDetail | null }>()
 const emit = defineEmits<{
   (event: 'update:show', value: boolean): void
-  (event: 'confirm', payload: { sku: ProductSku; quantity: number; mode: 'cart' | 'buy' }): void
+  (event: 'confirm', payload: { sku: ProductSku; quantity: number }): void
 }>()
+
+/** uview-pro 的 u-popup 只响应 v-model（modelValue），这里桥接 show prop */
+const popupVisible = computed({
+  get: () => props.show,
+  set: (value: boolean) => emit('update:show', value),
+})
 
 const selectedSize = ref<Size | null>(null)
 const selectedShape = ref<Shape | null>(null)
@@ -174,7 +172,7 @@ function close(): void {
   emit('update:show', false)
 }
 
-function confirm(mode: 'cart' | 'buy'): void {
+function confirm(): void {
   if (!selectedSku.value) {
     uni.showToast({ title: '请先选择尺码与甲型', icon: 'none' })
     return
@@ -185,7 +183,7 @@ function confirm(mode: 'cart' | 'buy'): void {
     return
   }
 
-  emit('confirm', { sku: selectedSku.value, quantity: quantity.value, mode })
+  emit('confirm', { sku: selectedSku.value, quantity: quantity.value })
   emit('update:show', false)
 }
 </script>

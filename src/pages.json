@@ -72,6 +72,12 @@
 					}
 				},
 				{
+					"path": "product/reviews",
+					"style": {
+						"navigationBarTitleText": "全部评价"
+					}
+				},
+				{
 					"path": "media/video",
 					"style": {
 						"navigationBarTitleText": "视频"

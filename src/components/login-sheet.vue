@@ -1,5 +1,5 @@
 <template>
-  <u-popup :show="loginSheetVisible" mode="bottom" :border-radius="24" @close="handleClose">
+  <u-popup v-model="loginSheetVisible" mode="bottom" :border-radius="24" @close="handleClose">
     <view class="login-sheet">
       <image class="avatar" src="/static/logo.png" mode="aspectFill" />
       <text class="title">登录后可继续</text>

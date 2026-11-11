@@ -9,41 +9,100 @@
         confirm-type="search"
         @confirm="onSearch"
       />
-      <text class="search-btn" @click="onSearch">搜索</text>
-    </view>
-
-    <view class="cat">
       <text
-        v-for="item in SORTS"
-        :key="item.value"
-        class="cat-item"
-        :class="{ active: sort === item.value }"
-        @click="selectSort(item.value)"
-      >
-        {{ item.name }}
-      </text>
+        class="search-btn"
+        @click="onSearch"
+      >搜索</text>
     </view>
 
-    <view v-if="loading && list.length === 0" class="hint">加载中…</view>
-    <u-empty v-else-if="list.length === 0" mode="list" text="没有符合条件的商品" />
-    <view v-else class="list">
-      <view v-for="item in list" :key="item.id" class="card" @click="openDetail(item)">
-        <image class="thumb" :src="item.cover" mode="aspectFill" lazy-load />
+    <scroll-view
+      scroll-x
+      :show-scrollbar="false"
+      class="cat"
+    >
+      <view class="cat-track">
+        <text
+          v-for="item in SORTS"
+          :key="item.value"
+          class="cat-item"
+          :class="{ active: sort === item.value }"
+          @click="selectSort(item.value)"
+        >
+          {{ item.name }}
+        </text>
+      </view>
+    </scroll-view>
+
+    <scroll-view
+      v-for="row in FILTER_ROWS"
+      :key="row.key"
+      scroll-x
+      :show-scrollbar="false"
+      class="cat"
+    >
+      <view class="cat-track">
+        <!-- <text class="cat-item cat-label">{{ row.label }}</text> -->
+        <text
+          v-for="opt in row.options"
+          :key="opt.value"
+          class="cat-item"
+          :class="{ active: filters[row.key] === opt.value }"
+          @click="selectFilter(row.key, opt.value)"
+        >
+          {{ opt.label }}
+        </text>
+      </view>
+    </scroll-view>
+
+    <view
+      v-if="loading && list.length === 0"
+      class="hint"
+    >加载中…</view>
+    <u-empty
+      v-else-if="list.length === 0"
+      mode="list"
+      text="没有符合条件的商品"
+    />
+    <view
+      v-else
+      class="list"
+    >
+      <view
+        v-for="item in list"
+        :key="item.id"
+        class="card"
+        @click="openDetail(item)"
+      >
+        <image
+          class="thumb"
+          :src="item.cover"
+          mode="aspectFill"
+          lazy-load
+        />
         <view class="detail">
           <text class="name">{{ item.name }}</text>
           <view class="tags">
             <text class="tag">{{ item.style }}</text>
-            <text v-if="item.tags.length > 0" class="tag tag-gray">{{ item.tags[0] }}</text>
+            <text
+              v-if="item.tags.length > 0"
+              class="tag tag-gray"
+            >{{ item.tags[0] }}</text>
           </view>
           <view class="meta">
-            <price-tag :price="item.price" :unit="item.isAccessory ? '/件' : '/副'" />
+            <price-tag
+              :price="item.price"
+              :unit="item.isAccessory ? '/件' : '/副'"
+            />
             <text class="sales">已售{{ item.sales }}</text>
           </view>
         </view>
       </view>
     </view>
 
-    <view v-if="list.length > 0" class="footer">
+    <view
+      v-if="list.length > 0"
+      class="footer"
+    >
       <text v-if="loading">加载中…</text>
       <text v-else-if="!hasMore">— 上拉加载更多 · 分页 —</text>
     </view>
@@ -51,9 +110,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { onReachBottom, onShow } from '@dcloudio/uni-app'
 import { productApi, type ProductSort } from '@/api/product'
+import {
+  SHAPE_LABELS,
+  SHAPE_OPTIONS,
+  SIZE_LABELS,
+  SIZE_OPTIONS,
+  STYLE_OPTIONS,
+  type ProductStyle,
+  type Shape,
+  type Size,
+} from '@/api/contract'
 import type { PublicProduct } from '@/api/contract'
 import PriceTag from '@/components/price-tag.vue'
 
@@ -64,7 +133,53 @@ const SORTS: Array<{ name: string; value: ProductSort }> = [
   { name: '价格', value: 'price' },
 ]
 
+type FilterKey = 'size' | 'shape' | 'style'
+
+interface FilterOption {
+  label: string
+  value: string
+}
+
+interface FilterRow {
+  key: FilterKey
+  label: string
+  options: FilterOption[]
+}
+
+const UNCATEGORIZED: FilterOption = { label: '不限', value: '' }
+
+const FILTER_ROWS: FilterRow[] = [
+  {
+    key: 'size',
+    label: '尺码',
+    options: [
+      UNCATEGORIZED,
+      ...SIZE_OPTIONS.map((v) => ({ label: SIZE_LABELS[v], value: v })),
+    ],
+  },
+  {
+    key: 'shape',
+    label: '甲型',
+    options: [
+      UNCATEGORIZED,
+      ...SHAPE_OPTIONS.map((v) => ({ label: SHAPE_LABELS[v], value: v })),
+    ],
+  },
+  {
+    key: 'style',
+    label: '风格',
+    options: [
+      UNCATEGORIZED,
+      ...STYLE_OPTIONS.map((v) => ({ label: v, value: v })),
+    ],
+  },
+]
+
 const sort = ref<ProductSort>('default')
+const filters = reactive({ size: '', shape: '', style: '' }) as Record<
+  FilterKey,
+  string
+>
 const keyword = ref('')
 const list = ref<PublicProduct[]>([])
 const loading = ref(false)
@@ -78,6 +193,9 @@ async function load(reset = true): Promise<void> {
     const result = await productApi.search({
       keyword: keyword.value.trim() || undefined,
       sort: sort.value,
+      size: (filters.size || undefined) as Size | undefined,
+      shape: (filters.shape || undefined) as Shape | undefined,
+      style: (filters.style || undefined) as ProductStyle | undefined,
       page: target,
       pageSize: 10,
     })
@@ -96,6 +214,14 @@ function selectSort(value: ProductSort): void {
     return
   }
   sort.value = value
+  void load(true)
+}
+
+function selectFilter(key: FilterKey, value: string): void {
+  if (filters[key] === value) {
+    return
+  }
+  filters[key] = value
   void load(true)
 }
 
@@ -153,9 +279,14 @@ onReachBottom(() => {
 }
 
 .cat {
-  display: flex;
-  flex-wrap: nowrap;
+  width: 100%;
   margin-top: 16rpx;
+}
+
+.cat-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   padding-bottom: 6rpx;
 }
 
@@ -168,6 +299,13 @@ onReachBottom(() => {
   background-color: $app-color-white;
   border: 1rpx solid $app-color-border;
   border-radius: $app-radius-pill;
+}
+
+.cat-label {
+  color: $app-color-text;
+  font-weight: 600;
+  background-color: transparent;
+  border: none;
 }
 
 .active {

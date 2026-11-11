@@ -34,7 +34,7 @@
       </view>
     </view>
 
-    <u-popup :show="shipVisible" mode="bottom" :border-radius="24" @close="shipVisible = false">
+    <u-popup v-model="shipVisible" mode="bottom" :border-radius="24" @close="shipVisible = false">
       <view class="ship-form">
         <text class="ship-title">填写物流信息</text>
         <text class="ship-order">{{ shipOrderId }}</text>

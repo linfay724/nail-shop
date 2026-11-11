@@ -221,7 +221,8 @@ onShow(() => {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  /* H5 下 tabBar 页面为 50px，小程序端为 0，避免底栏被 tabBar 遮挡 */
+  bottom: var(--window-bottom);
   display: flex;
   align-items: center;
   padding: 20rpx 24rpx;

@@ -47,7 +47,7 @@
     </view>
 
     <u-popup
-      :show="addressPickerVisible"
+      v-model="addressPickerVisible"
       mode="bottom"
       :border-radius="24"
       @close="addressPickerVisible = false"

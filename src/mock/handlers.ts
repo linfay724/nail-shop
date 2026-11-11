@@ -142,12 +142,18 @@ function queryProducts(
 ): PagedResult<PublicProduct> {
   const keyword = String(payload.keyword ?? '').trim().toLowerCase()
   const sort = String(payload.sort ?? 'default')
+  const size = typeof payload.size === 'string' && payload.size ? payload.size : undefined
+  const shape = typeof payload.shape === 'string' && payload.shape ? payload.shape : undefined
+  const style = typeof payload.style === 'string' && payload.style ? payload.style : undefined
   const { page, pageSize } = readPage(payload)
 
   const filtered = db.products
     // 工具包等配件同样上架可搜可购，加购后独立成行且不参与包邮副数
     .filter((product) => product.onSale)
     .filter((product) => !merchantId || product.merchantId === merchantId)
+    .filter((product) => !size || product.skus.some((sku) => sku.size === size))
+    .filter((product) => !shape || product.skus.some((sku) => sku.shape === shape))
+    .filter((product) => !style || product.style === style)
     .filter((product) => {
       if (!keyword) {
         return true
